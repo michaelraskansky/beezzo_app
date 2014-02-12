@@ -1,3 +1,7 @@
+Code.require_file "diameter_records.ex", "include"
+Code.require_file "base_records.ex", "include"
+Code.require_file "dcca_records.ex", "include"
+
 defmodule Dcca.Stack do
   use GenServer.Behaviour
 
@@ -5,10 +9,11 @@ defmodule Dcca.Stack do
     :gen_server.start_link({:local, :stack}, __MODULE__, [opts], [])
   end
 
-  def init(opts) do
+  def init(_opts) do
+
     svcName = "rfc4006"
     svcDict = :rfc4006_cc
-    svcMod  = :Dcca.Application
+    svcMod  = :Dcca.App.Gy
     originHost = "dcca.beezz.mobi"
     originRealm = "beezz.mobi"
     vendorId = 10415
@@ -17,11 +22,15 @@ defmodule Dcca.Stack do
     transportModule = :diameter_tcp
     ip = {127,0,0,1}
     port = 3868
+    #vendorSpecific = :"Vendor-Specific-Application-Id".new("Vendor-Id": 10415, "Auth-Application-Id": 4)
 
-    dcca = [
-      alias: svcName, 
-      dictionary: svcDict, 
-      module: svcMod
+    baseOpts = [
+      "Origin-Host": originHost,
+      "Origin-Realm": originRealm,
+      "Vendor-Id": 0,
+      "Product-Name": productName,
+      "Auth-Application-Id": [0],
+      "application": [alias: "base", dictionary: :diameter_gen_base_rfc3588, module: :Dcca.App.Base]
     ]
 
     svcOpts = [
@@ -29,8 +38,9 @@ defmodule Dcca.Stack do
       "Origin-Realm": originRealm,
       "Vendor-Id": vendorId,
       "Product-Name": productName,
+      #"Vendor-Specific-Application-Id": vendorSpecific,
       "Auth-Application-Id": [dccaApplicationId],
-      "application": dcca
+      "application": [alias: svcName, dictionary: svcDict, module: svcMod]
     ]
 
     transportOpts = [
@@ -39,6 +49,9 @@ defmodule Dcca.Stack do
     ]
     
     :diameter.start_service svcName, svcOpts
+    :diameter.start_service "base", baseOpts
+
     :diameter.add_transport svcName, {:listen, transportOpts}
+    :diameter.add_transport "base", {:listen, transportOpts}
   end
 end
