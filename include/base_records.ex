@@ -1,0 +1,25 @@
+#Message Records
+defrecord :diameter_base_CER, Record.extract(:diameter_base_CER, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_CEA, Record.extract(:diameter_base_CEA, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_DPR, Record.extract(:diameter_base_DPR, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_DPA, Record.extract(:diameter_base_DPA, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_DWR, Record.extract(:diameter_base_DWR, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_DWA, Record.extract(:diameter_base_DWA, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_RAR, Record.extract(:diameter_base_RAR, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_RAA, Record.extract(:diameter_base_RAA, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_STR, Record.extract(:diameter_base_STR, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_STA, Record.extract(:diameter_base_STA, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_ASR, Record.extract(:diameter_base_ASR, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_ASA, Record.extract(:diameter_base_ASA, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_ACR, Record.extract(:diameter_base_ACR, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_ACA, Record.extract(:diameter_base_ACA, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :diameter_base_ASA, Record.extract(:diameter_base_ASA, from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+
+#Grouped AVP records
+defrecord :"diameter_base_answer-message", Record.extract(:"diameter_base_answer-message", from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :"diameter_base_Proxy-Info", Record.extract(:"diameter_base_Proxy-Info", from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :"diameter_base_Failed-AVP", Record.extract(:"diameter_base_Failed-AVP", from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :"diameter_base_Experimental-Result", Record.extract(:"diameter_base_Experimental-Result", from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :"diameter_base_Vendor-Specific-Application-Id", Record.extract(:"diameter_base_Vendor-Specific-Application-Id", from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+defrecord :"diameter_base_E2E-Sequence", Record.extract(:"diameter_base_E2E-Sequence", from_lib: "diameter/include/diameter_gen_base_rfc3588.hrl")
+

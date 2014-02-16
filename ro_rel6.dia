@@ -1,0 +1,974 @@
+@id 4
+@inherits diameter_gen_base_rfc3588
+@vendor 10415 TGPP
+
+
+;; IANA =================================================================
+@avp_types
+  Operator-Name                     126     OctetString   -
+  Location-Information	            127     OctetString   -
+;; RFC 4005=================================================================
+
+@avp_types
+  Filter-Id                          11     UTF8String    M
+
+;; RFC 4006 =================================================================
+
+@avp_types
+
+   Called-Station-Id                 30     UTF8String    M
+   CC-Correlation-Id                 411    OctetString   -
+   CC-Input-Octets                   412    Unsigned64    M
+   CC-Money                          413    Grouped       M
+   CC-Output-Octets                  414    Unsigned64    M
+   CC-Request-Number                 415    Unsigned32    M
+   CC-Request-Type                   416    Enumerated    M
+   CC-Service-Specific-Units         417    Unsigned64    M
+   CC-Session-Failover               418    Enumerated    M
+   CC-Sub-Session-Id                 419    Unsigned64    M
+   CC-Time                           420    Unsigned32    M
+   CC-Total-Octets                   421    Unsigned64    M
+   CC-Unit-Type                      454    Enumerated    M
+   Check-Balance-Result              422    Enumerated    M
+   Cost-Information                  423    Grouped       M
+   Cost-Unit                         424    UTF8String    M
+   Credit-Control                    426    Enumerated    M
+   Credit-Control-Failure-Handling   427    Enumerated    M
+   Currency-Code                     425    Unsigned32    M
+   Direct-Debiting-Failure-Handling  428    Enumerated    M
+   Exponent                          429    Integer32     M
+   Final-Unit-Action                 449    Enumerated    M
+   Final-Unit-Indication             430    Grouped       M
+   Granted-Service-Unit              431    Grouped       M
+   G-S-U-Pool-Identifier             453    Unsigned32    M
+   G-S-U-Pool-Reference              457    Grouped       M
+   Multiple-Services-Indicator       455    Enumerated    M
+   Rating-Group                      432    Unsigned32    M
+   Redirect-Address-Type             433    Enumerated    M
+   Redirect-Server                   434    Grouped       M
+   Redirect-Server-Address           435    UTF8String    M
+   Requested-Action                  436    Enumerated    M
+   Requested-Service-Unit            437    Grouped       M
+   Restriction-Filter-Rule           438    IPFilterRule  M
+   Service-Context-Id                461    UTF8String    M
+   Service-Identifier                439    Unsigned32    M
+   Service-Parameter-Info            440    Grouped       -
+   Service-Parameter-Type            441    Unsigned32    -
+   Service-Parameter-Value           442    OctetString   -
+   Subscription-Id                   443    Grouped       M
+   Subscription-Id-Data              444    UTF8String    M
+   Subscription-Id-Type              450    Enumerated    M
+   Tariff-Change-Usage               452    Enumerated    M
+   Tariff-Time-Change                451    Time          M
+   Unit-Value                        445    Grouped       M
+   Used-Service-Unit                 446    Grouped       M
+   User-Equipment-Info               458    Grouped       -
+   User-Equipment-Info-Type          459    Enumerated    -
+   User-Equipment-Info-Value         460    OctetString   -
+   Value-Digits                      447    Integer64     M
+   Validity-Time                     448    Unsigned32    M
+
+;; ===========================================================================
+
+@grouped
+
+   Cost-Information ::= < AVP Header: 423 >
+
+           { Unit-Value }
+           { Currency-Code }
+           [ Cost-Unit ]
+
+   Unit-Value ::= < AVP Header: 445 >
+
+           { Value-Digits }
+           [ Exponent ]
+
+   Granted-Service-Unit ::= < AVP Header: 431 >
+
+           [ Tariff-Time-Change ]
+           [ CC-Time ]
+           [ CC-Money ]
+           [ CC-Total-Octets ]
+           [ CC-Input-Octets ]
+           [ CC-Output-Octets ]
+           [ CC-Service-Specific-Units ]
+         * [ AVP ]
+
+   Requested-Service-Unit ::= < AVP Header: 437 >
+
+           [ CC-Time ]
+           [ CC-Money ]
+           [ CC-Total-Octets ]
+           [ CC-Input-Octets ]
+           [ CC-Output-Octets ]
+           [ CC-Service-Specific-Units ]
+         * [ AVP ]
+
+   Used-Service-Unit ::= < AVP Header: 446 >
+
+           [ Tariff-Change-Usage ]
+           [ CC-Time ]
+           [ CC-Money ]
+           [ CC-Total-Octets ]
+           [ CC-Input-Octets ]
+           [ CC-Output-Octets ]
+           [ CC-Service-Specific-Units ]
+         * [ AVP ]
+
+   CC-Money ::= < AVP Header: 413 >
+
+           { Unit-Value }
+           [ Currency-Code ]
+
+   G-S-U-Pool-Reference ::= < AVP Header: 457 >
+
+           { G-S-U-Pool-Identifier }
+           { CC-Unit-Type }
+           { Unit-Value }
+
+   Final-Unit-Indication ::= < AVP Header: 430 >
+
+           { Final-Unit-Action }
+         * [ Restriction-Filter-Rule ]
+         * [ Filter-Id ]
+           [ Redirect-Server ]
+
+   Redirect-Server ::= < AVP Header: 434 >
+
+           { Redirect-Address-Type }
+           { Redirect-Server-Address }
+
+   Service-Parameter-Info ::= < AVP Header: 440 >
+
+           { Service-Parameter-Type }
+           { Service-Parameter-Value }
+
+   Subscription-Id ::= < AVP Header: 443 >
+
+           { Subscription-Id-Type }
+           { Subscription-Id-Data }
+
+   User-Equipment-Info ::= < AVP Header: 458 >
+
+           { User-Equipment-Info-Type }
+           { User-Equipment-Info-Value }
+
+;; ===========================================================================
+
+@enum CC-Request-Type
+
+   INITIAL_REQUEST                 1
+   UPDATE_REQUEST                  2
+   TERMINATION_REQUEST             3
+   EVENT_REQUEST                   4
+
+@enum CC-Session-Failover
+
+   NOT_SUPPORTED                   0
+   SUPPORTED                       1
+
+@enum Check-Balance-Result
+
+   ENOUGH_CREDIT                   0
+   NO_CREDIT                       1
+
+@enum Credit-Control
+
+   AUTHORIZATION                   0
+   RE_AUTHORIZATION                1
+
+@enum Credit-Control-Failure-Handling
+
+   TERMINATE                       0
+   CONTINUE                        1
+   RETRY_AND_TERMINATE             2
+
+@enum Direct-Debiting-Failure-Handling
+
+   TERMINATE_OR_BUFFER             0
+   CONTINUE                        1
+
+@enum Tariff-Change-Usage
+
+   UNIT_BEFORE_TARIFF_CHANGE       0
+   UNIT_AFTER_TARIFF_CHANGE        1
+   UNIT_INDETERMINATE              2
+
+@enum CC-Unit-Type
+
+   TIME                            0
+   MONEY                           1
+   TOTAL-OCTETS                    2
+   INPUT-OCTETS                    3
+   OUTPUT-OCTETS                   4
+   SERVICE-SPECIFIC-UNITS          5
+
+@enum Final-Unit-Action
+
+   TERMINATE                       0
+   REDIRECT                        1
+   RESTRICT_ACCESS                 2
+
+@enum Redirect-Address-Type
+
+   IPV4                            0
+   IPV6                            1
+   URL                             2
+   SIP_URI                         3
+
+@enum Multiple-Services-Indicator
+
+   NOT_SUPPORTED                   0
+   SUPPORTED                       1
+
+@enum Requested-Action
+
+   DIRECT_DEBITING                 0
+   REFUND_ACCOUNT                  1
+   CHECK_BALANCE                   2
+   PRICE_ENQUIRY                   3
+
+@enum Subscription-Id-Type
+
+   END_USER_E164                   0
+   END_USER_IMSI                   1
+   END_USER_SIP_URI                2
+   END_USER_NAI                    3
+   END_USER_PRIVATE                4
+
+@enum User-Equipment-Info-Type
+
+   IMEISV                          0
+   MAC                             1
+   EUI64                           2
+   MODIFIED_EUI64                  3
+
+;; ===========================================================================
+
+@define Result-Code
+
+   END_USER_SERVICE_DENIED         4010
+   CREDIT_CONTROL_NOT_APPLICABLE   4011
+   CREDIT_LIMIT_REACHED            4012
+
+   USER_UNKNOWN                    5030
+   RATING_FAILED                   5031
+
+;; 3GPP TS 32.299 ===========================================================
+
+@avp_types
+
+  3GPP-Charging-Id 	                        2	  OctetString	MV
+  3GPP-PDP-Type 	                        3	  OctetString	MV
+  3GPP-GPRS-Negotiated-QoS-Profile 	        5	  UTF8String	MV
+  3GPP-IMSI-MCC-MNC 	                        8	  UTF8String	MV
+  3GPP-GGSN-MCC-MNC                        	9	  UTF8String	MV
+  3GPP-IMSI					1	  UTF8String    MV
+  3GPP-NSAPI 	                                10	  OctetString	MV
+  3GPP-Session-Stop-Indicator	                11	  OctetString	MV
+  3GPP-Selection-Mode	                        12	  OctetString	MV
+  3GPP-Charging-Characteristics	                13	  UTF8String	MV
+  3GPP-SGSN-MCC-MNC	                        18	  OctetString	MV
+  3GPP-MS-TimeZone	                        23	  OctetString	MV
+  3GPP-User-Location-Info	                22	  OctetString	MV
+  3GPP-RAT-Type	                                21	  OctetString	MV
+  Adaptations	                                1217      Enumerated	MV
+  Additional-Content-Information	        1207      Grouped	MV
+  Additional-Type-Information	                1205      UTF8String	MV
+  Address-Data	                                897	  UTF8String	MV
+  Address-Domain	                        898	  Grouped       MV
+  Address-Type	                                899	  Enumerated	MV
+  Addressee-Type	                        1208      Enumerated	MV
+  Applic-ID	                                1218      UTF8String	MV
+  Application-provided-called-party-address	837	  UTF8String	MV
+  Application-Server	                        836	  UTF8String	MV
+  Application-Server-Information	        850	  Grouped       MV
+  Associated-URI	                        856	  UTF8String	MV
+  Authorized-QoS				849 	  UTF8String    MV
+  Aux-Applic-Info	                        1219      UTF8String	MV
+  Bearer-Service				854	  OctetString   MV
+  Called-Party-Address	                        832	  UTF8String	MV
+  Calling-Party-Address	                        831	  UTF8String	MV
+  Called-Asserted-Identity	                1250      UTF8String	MV
+  Cause-Code	                                861	  Integer32     MV
+  CG-Address	                                846	  Address       MV
+  Charged-Party					857	  UTF8String    MV
+  Charging-Rule-Base-Name	                1004      UTF8String	MV
+  Class-Identifier	                        1214      Enumerated	MV
+  Content-Class	                                1220      Enumerated	MV
+  Content-Disposition	                        828	  UTF8String	MV
+  Content-Length	                        827	  Unsigned32	MV
+  Content-Size	                                1206      Unsigned32	MV
+  Content-Type	                                826	  UTF8String	MV
+  Deferred-Location-Event-Type	                1230      UTF8String	MV
+  Delivery-Report-Requested	                1216      Enumerated	MV
+  Domain-Name	                                1200      UTF8String    MV
+  DRM-Content	                                1221      Enumerated    MV
+  Event	                                        825	  UTF8String    MV
+  Event-Type	                                823	  Grouped       MV
+  Expires	                                888	  Unsigned32	MV
+  File-Repair-Supported	                        1224      Enumerated	MV
+  GGSN-Address	                                847	  Address       MV
+  IMS-Charging-Identifier	                841	  UTF8String	MV
+  Node-Functionality	                        862	  Enumerated	MV
+  IMS-Information	                        876	  Grouped       MV
+  Incoming-Trunk-Group-ID	                852       UTF8String    MV
+  Inter-Operator-Identifier	                838	  Grouped       MV
+  LCS-APN					1231	  UTF8String	MV
+  LCS-Client-Dialed-By-MS 	                1233      UTF8String    MV
+  LCS-Client-External-ID 	                1234      UTF8String    MV
+  LCS-Client-ID 	                        1232      Grouped       MV
+  LCS-Client-Name 	                        1235      Grouped       MV
+  LCS-Client-Type 	                        1241      Enumerated	MV
+  LCS-Data-Coding-Scheme 	                1236      UTF8String	MV
+  LCS-Format-Indicator 	                        1237      Enumerated	MV
+  LCS-Information	                        878	  Grouped       MV
+  LCS-Name-String 	                        1238      UTF8String	MV
+  LCS-Requestor-ID 	                        1239      Grouped       MV
+  LCS-Requestor-ID-String 	                1240      UTF8String	MV
+  Location-Estimate 	                        1242      UTF8String	MV
+  Location-Estimate-Type 	                1243      Enumerated	MV
+  Location-Type 	                        1244      Grouped       MV
+  Media-Initiator-Flag	                        882	  Enumerated	MV
+  Message-Body	                                889	  Grouped       MV
+  MBMS-Information	                        880	  Grouped       MV
+  MBMS-Service-Area	                        903	  OctetString	MV
+  MBMS-Session-Identity	                        908	  OctetString	MV
+  MBMS-Service-Type	                        906	  Enumerated	MV
+  MBMS-User-Service-Type	                1225      Enumerated	MV
+  MBMS-2G-3G-Indicator	                        907	  Enumerated	MV
+  Message-Class	                                1213      Grouped       MV
+  Message-ID	                                1210      UTF8String	MV
+  Message-Type	                                1211      Enumerated	MV
+  Message-Size	                                1212      Unsigned32	MV
+  MMBox-Storage-Requested	                1248      Enumerated	MV
+  MM-Content-Type	                        1203      Grouped       MV
+  MMS-Information	                        877	  Grouped       MV
+  MSISDN					701       OctetString   MV
+  Multiple-Services-Credit-Control		456	  Grouped	MV
+  Number-Of-Participants	                885	  Unsigned32	MV
+  Originating-IOI	                        839	  UTF8String	MV
+  Originator	                                864	  Enumerated	MV
+  Originator-Address 	                        886	  Grouped       MV
+  Outgoing-Trunk-Group-ID 			853	  UTF8String    MV
+  Participants-Involved	                        887	  UTF8String	MV
+  PDG-Address	                                895	  Address       MV
+  PDG-Charging-Id	                        896	  Unsigned32	MV
+  PDP-Address	                                1227      Address       MV
+  PDP-Context-Type	                        1247      Enumerated	MV
+  PoC-Controlling-Address	                858	  UTF8String	MV
+  PoC-Group-Name	                        859	  UTF8String	MV
+  PoC-Information	                        879	  Grouped       MV
+  PoC-Server-Role	                        883	  Enumerated	MV
+  PoC-Session-Id	                        1229      UTF8String	MV
+  PoC-Session-Type	                        884	  Enumerated	MV
+  Positioning-Data	                        1245      UTF8String	MV
+  Priority	                                1209      Enumerated	MV
+  PS-Append-Free-Format-Data	                867       Enumerated	MV
+  PS-Free-Format-Data	                        866       OctetString	MV
+  PS-Furnish-Charging-Information	        865       Grouped       MV
+  PS-Information	                        874       Grouped       MV
+  Quota-Consumption-Time	                881       Unsigned32	MV
+  Quota-Holding-Time	                        871       Unsigned32	MV
+  RAI	                                        909       UTF8String	MV
+  Read-Reply-Report-Requested	                1222      Enumerated	MV
+  Recipient-Address	                        1201      Grouped       MV
+  Reply-Applic-ID	                        1223      UTF8String	MV
+  Reporting-Reason	                        872	  Enumerated	MV
+  Requested-Party-Address	                1251      UTF8String	MV
+  Required-MBMS-Bearer-Capabilities	        901	  UTF8String	MV
+  Role-Of-Node	                                829	  Enumerated	MV
+  SDP-Media-Component	                        843	  Grouped    	MV
+  SDP-Media-Description	                        845	  UTF8String	MV
+  SDP-Media-Name	                        844	  UTF8String	MV
+  SDP-Session-Description	                842	  UTF8String	MV
+  Served-Party-IP-Address			848	  Address	MV
+  Server-Capabilities				603       Grouped	MV
+  Service-Id	                                855	  UTF8String	MV
+  Service-Information	                        873	  Grouped   	MV
+  Service-Specific-Data				863	  UTF8String    MV
+  SGSN-Address	                                1228      Address   	MV
+  SIP-Method	                                824	  UTF8String	MV
+  SIP-Request-Timestamp	                        834	  Time      	MV
+  SIP-Response-Timestamp	                835	  Time	        MV
+  Submission-Time	                        1202      Time      	MV
+  Talk-Burst-Exchange				1255	  Grouped       MV
+  Terminating-IOI	                        840	  UTF8String	MV
+  Time-Quota-Threshold	                        868	  Unsigned32	MV
+  Time-Stamps	                                833	  Grouped   	MV
+  TMGI	                                        900	  OctetString	MV
+  Token-Text	                                1215      UTF8String	MV
+  Trigger	                                1264      Grouped   	MV
+  Trigger-Type	                                870	  Enumerated	MV
+  Trunk-Group-ID	                        851       Grouped       MV
+  Type-Number	                                1204      Enumerated	MV
+  Unit-Quota-Threshold	                        1226      Unsigned32	MV
+  User-Session-ID	                        830	  UTF8String	MV
+  VAS-Id	                                1102      UTF8String	MV
+  VASP-Id	                                1101      UTF8String	MV
+  Volume-Quota-Threshold	                869	  Unsigned32	MV
+  WAG-Address	                                890	  Address    	MV
+  WAG-PLMN-Id	                                891	  OctetString	MV
+  WLAN-Information	                        875	  Grouped   	MV
+  WLAN-Radio-Container	                        892	  Grouped   	MV
+  WLAN-Session-Id	                        1246      UTF8String 	MV
+  WLAN-Technology	                        893	  Unsigned32	MV
+  WLAN-UE-Local-IPAddress	                894	  Address   	MV
+;; ===========================================================================
+
+@messages
+
+   CCR ::= < Diameter Header: 272, REQ, PXY >
+
+           < Session-Id >
+           { Origin-Host }
+           { Origin-Realm }
+           { Destination-Realm }
+           { Auth-Application-Id }
+           { Service-Context-Id }
+           { CC-Request-Type }
+           { CC-Request-Number }
+           [ Destination-Host ]
+           [ User-Name ]
+           [ CC-Sub-Session-Id ]
+           [ Acct-Multi-Session-Id ]
+           [ Origin-State-Id ]
+           [ Event-Timestamp ]
+         * [ Subscription-Id ]
+           [ Service-Identifier ]
+           [ Termination-Cause ]
+           [ Requested-Service-Unit ]
+           [ Requested-Action ]
+         * [ Used-Service-Unit ]
+           [ Multiple-Services-Indicator ]
+         * [ Multiple-Services-Credit-Control ]
+         * [ Service-Parameter-Info ]
+           [ CC-Correlation-Id ]
+           [ User-Equipment-Info ]
+         * [ Proxy-Info ]
+         * [ Route-Record ]
+           [ Service-Information ]
+         * [ AVP ]
+
+   CCA ::= < Diameter Header: 272, PXY >
+
+           < Session-Id >
+           { Result-Code }
+           { Origin-Host }
+           { Origin-Realm }
+           { Auth-Application-Id }
+           { CC-Request-Type }
+           { CC-Request-Number }
+           [ User-Name ]
+           [ CC-Session-Failover ]
+           [ CC-Sub-Session-Id ]
+           [ Acct-Multi-Session-Id ]
+           [ Origin-State-Id ]
+           [ Event-Timestamp ]
+           [ Granted-Service-Unit ]
+         * [ Multiple-Services-Credit-Control ]
+           [ Cost-Information]
+           [ Final-Unit-Indication ]
+           [ Check-Balance-Result ]
+           [ Credit-Control-Failure-Handling ]
+           [ Direct-Debiting-Failure-Handling ]
+           [ Validity-Time]
+         * [ Redirect-Host]
+           [ Redirect-Host-Usage ]
+           [ Redirect-Max-Cache-Time ]
+         * [ Proxy-Info ]
+         * [ Route-Record ]
+         * [ Failed-AVP ]
+           [ Service-Information ]
+         * [ AVP ]
+
+;; ===========================================================================
+
+@grouped
+
+  Multiple-Services-Credit-Control ::= < AVP Header: 456 >
+
+           [ Granted-Service-Unit ]
+           [ Requested-Service-Unit ]
+         * [ Used-Service-Unit ]
+           [ Tariff-Change-Usage ]
+         * [ Service-Identifier ]
+           [ Rating-Group ]
+         * [ G-S-U-Pool-Reference ]
+           [ Validity-Time ]
+           [ Result-Code ]
+           [ Final-Unit-Indication ]
+           [ Time-Quota-Threshold ]
+           [ Volume-Quota-Threshold ]
+           [ Unit-Quota-Threshold ]
+           [ Quota-Holding-Time ]
+           [ Quota-Consumption-Time ]
+         * [ Reporting-Reason ]
+           [ Trigger ]
+           [ PS-Furnish-Charging-Information ]
+         * [ AVP ]
+
+  Additional-Content-Information ::= < AVP Header: 1207 >
+
+          [ Type-Number ]
+	  [ Additional-Type-Information ]
+	  [ Content-Size ]
+
+  Address-Domain ::= < AVP Header: 898 >
+
+         [ Domain-Name ]
+         [ 3GPP-IMSI-MCC-MNC ]
+
+  Application-Server-Information ::= < AVP Header: 850 >
+
+	  [ Application-Server ]
+	* [ Application-provided-called-party-address ]
+
+  Event-Type ::= <AVP Header: 823 >
+
+	  [ SIP-Method ]
+	  [ Event ]
+	  [ Expires ]
+
+
+
+  IMS-Information ::= < AVP Header: 876>
+
+	  { Node-Functionality }
+          [ Event-Type ]
+	  [ Role-Of-Node ]
+	  [ User-Session-ID ]
+        * [ Calling-Party-Address ]
+	  [ Called-Party-Address ]
+        * [ Called-Asserted-Identity ]
+	  [ Requested-Party-Address ]
+        * [ Associated-URI ]
+	  [ Time-Stamps ]
+        * [ Application-Server-Information ]
+        * [ Inter-Operator-Identifier ]
+	  [ IMS-Charging-Identifier ]
+        * [ SDP-Session-Description ]
+        * [ SDP-Media-Component ]	
+	  [ Served-Party-IP-Address ]
+	  [ Server-Capabilities ]
+	  [ Trunk-Group-ID ]
+	  [ Bearer-Service ]
+	  [ Service-Id ]
+	  [ Service-Specific-Data ]
+        * [ Message-Body ]
+	  [ Cause-Code ]
+
+  Inter-Operator-Identifier ::= < AVP Header: 838 >
+
+	  [ Originating-IOI ]
+	  [ Terminating-IOI ]
+
+  LCS-Client-ID ::= < AVP Header: 1232 >
+
+          [ LCS-Client-Type ]
+          [ LCS-Client-External-ID ]
+          [ LCS-Client-Dialed-By-MS ]
+          [ LCS-Client-Name ]
+          [ LCS-APN ]
+          [ LCS-Requestor-ID ]
+
+  LCS-Client-Name ::= < AVP Header: 1235>
+
+          [ LCS-Data-Coding-Scheme ]
+          [ LCS-Name-String ]
+          [ LCS-Format-Indicator ]
+
+  LCS-Information ::= < AVP Header: 878>
+
+          [ LCS-Client-ID ]
+          [ Location-Type ]
+          [ Location-Estimate ]
+          [ Positioning-Data ]
+          [ 3GPP-IMSI ]
+          [ MSISDN ]
+
+  LCS-Requestor-ID ::= < AVP Header: 1239 >
+
+          [ LCS-Data-Coding-Scheme ]
+          [ LCS-Requestor-ID-String ]
+
+  Location-Type ::= < AVP Header: 1244>
+
+          [ Location-Estimate-Type ]
+          [ Deferred-Location-Event-Type ]
+
+  MBMS-Information ::= < AVP Header: 880>
+
+          [ TMGI ]
+          [ MBMS-Service-Type ]
+          [ MBMS-User-Service-Type ]
+          [ File-Repair-Supported ]
+          [ Required-MBMS-Bearer-Capabilities ]
+          [ MBMS-2G-3G-Indicator ]
+          [ RAI ]
+        * [ MBMS-Service-Area ]
+          [ MBMS-Session-Identity ]
+
+  Message-Body ::= < AVP Header: 889 >
+
+          { Content-Type }
+          { Content-Length }
+          [ Content-Disposition ]
+	  [ Originator ]
+
+  Message-Class ::= < AVP Header: 1213 >
+
+          [ Class-Identifier ]
+          [ Token-Text ]
+
+  MM-Content-Type ::= < AVP Header: 1203 >
+
+          [ Type-Number ]
+          [ Additional-Type-Information ]
+          [ Content-Size ]
+        * [ Additional-Content-Information ]
+
+  MMS-Information ::= < AVP Header: 877>
+
+          [ Originator-Address ]
+        * [ Recipient-Address ] 
+          [ Submission-Time ]
+          [ MM-Content-Type ]
+          [ Priority ]
+          [ Message-ID ]
+          [ Message-Type ]
+          [ Message-Size ]
+          [ Message-Class ]
+          [ Delivery-Report-Requested ]
+          [ Read-Reply-Report-Requested ]
+          [ MMBox-Storage-Requested ]
+          [ Applic-ID ]
+          [ Reply-Applic-ID ]
+          [ Aux-Applic-Info ]
+          [ Content-Class ]
+          [ DRM-Content ]
+          [ Adaptations ]
+          [ VASP-Id ]
+          [ VAS-Id ]
+
+
+  Originator-Address ::= < AVP Header: 886 >
+
+         [ Address-Type ]
+         [ Address-Data ]
+         [ Address-Domain ]
+
+  PoC-Information ::= < AVP Header: 879>
+         [ PoC-Server-Role ]
+         [ PoC-Session-Type ]
+         [ Number-Of-Participants ]
+       * [ Participants-Involved ]
+       * [ Talk-Burst-Exchange ]
+         [ PoC-Controlling-Address ] 
+         [ PoC-Group-Name ]
+         [ PoC-Session-Id ] 
+         [ Charged-Party ]
+
+  PS-Furnish-Charging-Information ::= < AVP Header: 865>
+
+         { 3GPP-Charging-Id }
+         { PS-Free-Format-Data }
+         [ PS-Append-Free-Format-Data ]
+
+  PS-Information ::= < AVP Header: 874>
+
+         [ 3GPP-Charging-Id ]
+         [ 3GPP-PDP-Type ]
+         [ PDP-Address ]
+         [ 3GPP-GPRS-Negotiated-QoS-Profile ]
+         [ SGSN-Address ]
+         [ GGSN-Address ]
+         [ CG-Address ]
+         [ 3GPP-IMSI-MCC-MNC ]
+         [ 3GPP-GGSN-MCC-MNC ]
+         [ 3GPP-NSAPI ]
+         [ Called-Station-Id ]
+         [ 3GPP-Session-Stop-Indicator ]
+         [ 3GPP-Selection-Mode ]
+         [ 3GPP-Charging-Characteristics ]
+         [ 3GPP-SGSN-MCC-MNC ]
+         [ 3GPP-MS-TimeZone ]
+         [ Charging-Rule-Base-Name ] 
+         [ 3GPP-User-Location-Info ]
+         [ 3GPP-RAT-Type ]
+         [ PS-Furnish-Charging-Information ]
+         [ PDP-Context-Type ]
+
+  Recipient-Address ::= < AVP Header: 1201 >
+
+         [ Address-Type ]
+         [ Address-Data ]
+         [ Address-Domain ]
+         [ Addressee-Type ]
+
+  SDP-Media-Component ::= < AVP Header: 843 >
+
+         [ SDP-Media-Name ]
+       * [ SDP-Media-Description ]
+         [ Media-Initiator-Flag]
+         [ Authorized-QoS ]
+         [ 3GPP-Charging-Id ]
+
+  Service-Information ::= < AVP Header: 873>
+
+	 [ PS-Information ]
+ 	 [ WLAN-Information ]
+         [ IMS-Information ]
+         [ MMS-Information ]
+         [ LCS-Information ]
+         [ PoC-Information ]
+	 [ MBMS-Information ]
+
+  Time-Stamps ::= < AVP Header: 833 >
+
+        [ SIP-Request-Timestamp ]
+        [ SIP-Response-Timestamp ]
+
+  Trigger ::= < AVP Header: 1264 >
+
+      * [ Trigger-Type ]
+
+  WLAN-Information ::= < AVP Header: 875>
+
+        [ WLAN-Session-Id ]
+        [ PDG-Address ]
+        [ PDG-Charging-Id ]
+        [ WAG-Address ]
+        [ WAG-PLMN-Id ]
+        [ WLAN-Radio-Container ]
+        [ WLAN-UE-Local-IPAddress ]
+
+  WLAN-Radio-Container ::= < AVP Header: 892>
+
+	[ Operator-Name ]
+	[ Location-Type ]
+	[ Location-Information ]
+	[ WLAN-Technology ]
+
+  Trunk-Group-ID ::= < AVP Header: 851 >
+	[ Incoming-Trunk-Group-ID ]
+  	[ Outgoing-Trunk-Group-ID ]
+
+
+;; ===========================================================================
+
+@enum Adaptations
+
+  YES                            0
+  NO                             1
+
+@enum Address-Type
+
+  E_MAIL_ADDRESS                 0
+  MSISDN                         1
+  IPV4_ADDRESS                   2
+  IPV6_ADDRESS                   3
+  NUMERIC_SHORTCODE              4
+  ALPHANUMERIC_SHORTCODE         5
+  OTHER                          6
+
+@enum Addressee-Type
+
+  TO                             0
+  CC                             1
+  BCC                            2
+
+@enum Class-Identifier
+
+  PERSONAL                       0
+  ADVERDISMENT                   1
+  INFORMATIONAL                  2
+  AUTO                           3
+
+@enum Content-Class
+
+  TEXT                           0	
+  IMAGE_BASIC                    1	
+  IMAGE_RICH                     2	
+  VIDEO_BASIC                    3	
+  VIDEO_RICH                     4	
+  MEGAPIXEL                      5	
+  CONTENT_BASIC                  6	
+  CONTENT_RICH                   7	
+
+@enum Delivery-Report-Requested
+
+  NO                            0
+  YES                           1
+
+@enum DRM-Content
+
+  NO                            0
+  YES                           1
+
+@enum File-Repair-Supported
+
+  SUPPORTED                     1
+  NOT_SUPPORTED                 2
+
+@enum LCS-Client-Type 
+
+  EMERGENCY_SERVICES	        0
+  VALUE_ADDED_SERVICES		1
+  PLMN_OPERATOR_SERVICES	2
+  LAWFUL_INTERCEPT_SERVICES	3
+
+@enum LCS-Format-Indicator 
+
+  LOGICAL_NAME	                0 
+  EMAIL_ADDRESS		        1
+  MSISDN		        2
+  URL		                3
+  SIP_URL                       4
+
+@enum Location-Estimate-Type
+
+  CURRENT_LOCATION		0
+  CURRENT_LAST_KNOWN_LOCATION	1
+  INITIAL_LOCATION		2
+  ACTIVATE_DEFERRED_LOCATION	3
+  CANCEL_DEFERRED_LOCATION	4
+
+@enum Media-Initiator-Flag
+
+  CALLED_PARTY			0
+  CALLING_PARTY			1
+  UNKNOWN			2
+
+@enum MBMS-Service-Type
+
+  MULTICAST                     0
+  BROADCAST                     1
+
+@enum MBMS-User-Service-Type
+
+  DOWNLOAD                      0
+  STREAMING                     1
+
+@enum MBMS-2G-3G-Indicator
+
+  2G				0
+  3G				1
+  2G_AND_3G			2
+
+@enum Message-Type
+
+  M_SEND_REQ			1
+  M_SEND_CONF			2
+  M_NOTIFICATION_IND 		3
+  M_NOTIFYRESP_IND 		4
+  M_RETRIEVE_CONF 		5
+  M_ACKNOWLEDGE_IND 		6
+  M_DELIVERY_IND 		7
+  M_READ_REC_IND 		8
+  M_READ_ORIG_IND		9
+  M_FORWARD_REQ 		10
+  M_FORWARD_CONF 		11
+  M_MBOX_STORE_CONF		12
+  M_MBOX_VIEW_CONF 		13
+  M_MBOX_UPLOAD_CONF 		14
+  M_MBOX_DELETE_CONF 		15
+
+@enum MMBox-Storage-Requested
+
+  NO                            0
+  YES                           1
+
+@enum Node-Functionality
+
+  S-CSCF	                0
+  P-CSCF			1
+  I-CSCF			2
+  MRFC				3
+  MGCF				4
+  BGCF				5
+  AS				6
+
+@enum Originator
+  CALLING_PARTY			0
+  CALLED_PARTY			1
+
+@enum PDP-Context-Type
+
+  PRIMARY			0
+  SECONDARY			1
+
+@enum PoC-Server-Role
+
+  PARTICIPATING_POC_SERVER	0
+  CONTROLLING_POC_SERVER	1
+
+@enum PoC-Session-Type
+
+  1_TO_1_POC_SESSION		 0
+  CHAT_POC_GROUP_SESSION	 1
+  PRE_ARRANGED_POC_GROUP_SESSION 2	
+  AD_HOC_POC_GROUP_SESSION	 3
+
+@enum Priority
+
+  LOW				0
+  NORMAL			1
+  HIGH				2
+
+@enum PS-Append-Free-Format-Data
+
+  APPEND			0
+  OVERWRITE			1
+
+@enum Read-Reply-Report-Requested
+
+  NO                            0
+  YES                           1
+
+@enum Reporting-Reason
+
+  THRESHOLD			0
+  QHT				1
+  FINAL				2
+  QUOTA_EXHAUSTED		3
+  VALIDITY_TIME			4
+  OTHER_QUOTA_TYPE		5
+  RATING_CONDITION_CHANGE	6
+  FORCED_REAUTHORISATION	7
+  POOL_EXHAUSTED		8
+
+@enum Role-Of-Node
+
+  ORIGINATING_ROLE		0
+  TERMINATING_ROLE		1
+  PROXY_ROLE			2
+  B2BUA_ROLE			3
+
+@enum Trigger-Type
+
+ CHANGE_IN_SGSN_IP_ADDRESS 	 		1 
+  CHANGE_IN_QOS  				2 
+  CHANGE_IN_LOCATION  				3 
+  CHANGE_IN_RAT  				4 
+  CHANGEINQOS_TRAFFIC_CLASS  			10 
+  CHANGEINQOS_RELIABILITY_CLASS 		11 
+  CHANGEINQOS_DELAY_CLASS  			12 
+  CHANGEINQOS_PEAK_THROUGHPUT  			13 
+  CHANGEINQOS_PRECEDENCE_CLASS  		14 
+  CHANGEINQOS_MEAN_THROUGHPUT  			15 
+  CHANGEINQOS_MAXIMUM_BIT_RATE_FOR_UPLINK  	16 
+  CHANGEINQOS_MAXIMUM_BIT_RATE_FOR_DOWNLINK  	17 
+  CHANGEINQOS_RESIDUAL_BER  			18 
+  CHANGEINQOS_SDU_ERROR_RATIO  			19 
+  CHANGEINQOS_TRANSFER_DELAY  			20 
+  CHANGEINQOS_TRAFFIC_HANDLING_PRIORITY  	21 
+  CHANGEINQOS_GUARANTEED_BIT_RATE_FOR_UPLINK  	22 
+  CHANGEINQOS_GUARANTEED_BIT_RATE_FOR_DOWNLINK  23 
+  CHANGEINLOCATION_MCC  			30 
+  CHANGEINLOCATION_MNC  			31 
+  CHANGEINLOCATION_RAC  			32 
+  CHANGEINLOCATION_LAC  			33 
+  CHANGEINLOCATION_CellId  			34 
+  CHANGE_IN_MEDIA_COMPOSITION  			40 
+  CHANGEINPARTICIPANTS_Number 		 	50  
