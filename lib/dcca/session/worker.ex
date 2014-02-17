@@ -1,37 +1,44 @@
 defmodule Dcca.Session.Worker do
+  use GenFSM.Behaviour
 
   # API functions
+  def start_session({session_supervisor, session_id, imsi}) when is_pid(session_supervisor) do
+    IO.puts "#{__MODULE__}.start_session(#{inspect session_supervisor}, #{session_id}, #{imsi})"
 
-  def start(session_super, ccr_init) do
-    IO.puts "#{__MODULE__}.start"
-
-    :supervisor.start_child(session_super, [ccr_init])
+    :supervisor.start_child(session_supervisor, [])
   end
 
-  def start_link(ccr_init) do
+  def update_session(ccr_update) do
+    
+  end
+
+  def terminate_session(ccr_terminate) do
+    
+  end
+
+  # Supervisor Callbacks
+
+  def start_link do
     IO.puts "#{__MODULE__}.start_link"
 
-    :gen_fsm.start_link({:local, create_local_session_id(ccr_init)}, __MODULE__, [ccr_init], [])
+    :gen_fsm.start_link(__MODULE__, [], [[]])
   end
 
   # GenFSM Callbacks
 
-  def init(session_state) do
-    IO.puts "#{__MODULE__}.init"
+  def init(opts) do
+    IO.puts "#{__MODULE__}.init(#{opts})"
 
-    {:ok, :open, session_state}
+    {:ok, :open, []}
   end
 
-  # Private Functions
-  defp create_local_session_id(ccr_init) do
-    IO.puts "#{__MODULE__}.create_local_session_id"
-
-    binary_to_atom "#{ccr_init."Session-Id"}"
+  def open(:update, session_state) do
+    
   end
 
-  defp get_local_session_sup(ccr_init) do
-    IO.puts "#{__MODULE__}.get_local_session_sup"
-
-    binary_to_atom "#{ccr_init."Auth-Application-Id"}@#{ccr_init."Origin-Host"}"
+  def open(:terminate, session_state) do
+    
   end
+
+  # Private Helper Functions
 end
