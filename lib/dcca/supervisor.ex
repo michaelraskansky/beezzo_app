@@ -11,6 +11,7 @@ defmodule Dcca.Supervisor do
     children = [
       supervisor(Dcca.Peer.Supervisor, [opts]),
       worker(Dcca.Peer.ActivePeerDB, [opts]),
+      worker(Dcca.Session.Ets, [opts]),
       worker(Dcca.Stack.Main, [opts])
     ]
     supervise(children, strategy: :one_for_one)

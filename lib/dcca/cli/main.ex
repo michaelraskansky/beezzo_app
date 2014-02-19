@@ -1,8 +1,8 @@
 defmodule Dcca.CLI do
   def list_peers do
-    Dcca.Peer.ActivePeerDB.list_peers
+    Dcca.Peer.ActivePeerDB.list
   end
   def list_sessions(peer) do
-    IO.puts inspect :supervisor.which_children binary_to_atom(peer)
+    :supervisor.which_children :gen_server.call(:peer_db, {:get_supervisor, peer})
   end
 end

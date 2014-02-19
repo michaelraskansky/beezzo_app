@@ -2,20 +2,36 @@ defrecord Dcca.Peer.ActivePeer, host: nil , session_supervisor: nil, capabilites
 
 defmodule Dcca.Peer.ActivePeerDB do
  use GenServer.Behaviour
+ alias Dcca.Peer.ActivePeer, as: ActivePeer
 
  # API
  def start_link(_opts) do
    :gen_server.start_link({:local, :peer_db},__MODULE__, [], [])
  end
 
- def add_peer(host, session_supervisor, capabilites) do
-   :gen_server.cast(:peer_db, {:add, Dcca.Peer.ActivePeer.new(host: host, session_supervisor: session_supervisor, capabilites: capabilites)})
+ def add(res = {:ok, session_supervisor}, capabilites) do
+   IO.puts "#{__MODULE__}.add(#{inspect res})"
+
+   {_, host} = capabilites.origin_host
+   :gen_server.cast(:peer_db, {:add, ActivePeer.new(host: list_to_atom(host), session_supervisor: session_supervisor, capabilites: capabilites)})
  end
- def list_peers do
+ def add(sup, _), do: raise "#{sup}"
+
+ def list do
    :gen_server.cast(:peer_db, {:list})
  end
- def get_peer_session_supervisor(peer) do
-   :gen_server.call(:peer_db, {:get_supervisor, peer})
+ def get({peer, session_id, subscription_id}) do
+   IO.puts "#{__MODULE__}.add(#{inspect peer})"
+
+   { 
+     :gen_server.call(:peer_db, {:get_supervisor, peer}), 
+     peer, 
+     session_id, 
+     subscription_id 
+   }
+ end
+ def delete(peer) do
+   :ok
  end
 
  # GenServer Callbacks
@@ -24,6 +40,7 @@ defmodule Dcca.Peer.ActivePeerDB do
  end
 
  def handle_call({:get_supervisor, peer}, _from, peers) do
+   IO.puts "#{__MODULE__}.add(#{inspect peer})"
    {:reply, HashDict.fetch!(peers, list_to_atom(peer)).session_supervisor, peers}
  end
  def handle_cast({:add, new_peer}, peers) do
