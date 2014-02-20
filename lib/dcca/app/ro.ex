@@ -7,7 +7,7 @@ defmodule Dcca.App.Ro do
 # diameter_app Callbacks ###############################################################################################################
   # this method should add a peer session supervisor and record the peer supervisor and peer id in 
   # the active peer db
-  def peer_up(_svcName, {_peerRef, cap}, state) do                      
+  def peer_up(_svcName, {_peerRef, cap}, _state) do                      
     IO.puts "#{__MODULE__}.peer_up"
     
     #Start a session supervisor for the peer and add the peer + supervisor to the Peer ETS
@@ -20,7 +20,7 @@ defmodule Dcca.App.Ro do
   # This is the callback method for when a peer goes down,
   # We should stop the session supervisor for the peer(delete all sessions) and finally remove the refrence
   # From the active peer db.
-  def peer_down(_svcName, {_peerRef, cap}, state) do                    
+  def peer_down(_svcName, {_peerRef, cap}, _state) do                    
     IO.puts "#{__MODULE__}.peer_down"
 
     {_, origin_host} = cap.origin_host
@@ -33,7 +33,6 @@ defmodule Dcca.App.Ro do
   # This method is the callback to handle CCR request.
   # The case pattern mathched the request type and send it to the correct flow for the message
   def handle_request({:diameter_packet, _header, _avps, msg, _bin, _errors, _transport_data} ,_,_state) do
-    IO.puts "#{__MODULE__}.handle_request"
 
     case msg do
       {:CCR, _, _, _, _, _, _, 1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
@@ -69,10 +68,9 @@ defmodule Dcca.App.Ro do
   defp start_policy(cca), do: cca
 
   defp reply(session_req) do 
-    IO.puts "#{__MODULE__}.reply"
 
-    cca = session_req.cca
-    {:reply, cca}
+  #cca = session_req.cca
+    {:reply, session_req.cca}
   end
 
 ######################################################################################################################################
