@@ -36,32 +36,37 @@ defmodule Dcca.App.Ro do
   # The case pattern mathched the request type and send it to the correct flow for the message
   def handle_request({:diameter_packet, _header, _avps, msg, _bin, _errors, _transport_data} ,_,_state) do
 
-    case msg do
-      {:CCR, _, _, _, _, _, _, 1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
+    try do
+      case msg do
+        {:CCR, _, _, _, _, _, _, 1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
+          msg
+            |> SessionWorker.initial   # Once the Session FSM has been initilized and register we pass the init
+            |> start_policy            # This function will start the policy yet to be implemented to manipulate AVPs and authorize
+            |> reply                   # This function will send the reply bach to diameter stack 
+
+        {:CCR, _, _, _, _, _, _, 2, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
+          msg
+            |> SessionWorker.update
+            |> start_policy
+            |> reply
+
+        {:CCR, _, _, _, _, _, _, 3, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
+          msg 
+            |> SessionWorker.terminate
+            |> start_policy
+            |> reply
+
+        {:CCR, _, _, _, _, _, _, 4, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
+          msg
+            |> SessionWorker.event
+            |> reply
+      end
+      catch e, r  ->
+        IO.puts "#{__MODULE__}.handle_request exception!#{e} #{r}"
         msg
-          |> SessionWorker.initial   # Once the Session FSM has been initilized and register we pass the init
-          |> start_policy            # This function will start the policy yet to be implemented to manipulate AVPs and authorize
-          |> reply                   # This function will send the reply bach to diameter stack 
-
-      {:CCR, _, _, _, _, _, _, 2, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
-        msg
-          |> SessionWorker.update
-          |> start_policy
+          |> create_error_response
           |> reply
-
-      {:CCR, _, _, _, _, _, _, 3, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
-        msg 
-          |> SessionWorker.terminate
-          |> start_policy
-          |> reply
-
-      {:CCR, _, _, _, _, _, _, 4, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
-        SessionWorker.event(msg)
-          |> reply
-
-      _ -> :bad_packet
-    end
-
+        end
   end                             
 ######################################################################################################################################
 
@@ -69,6 +74,9 @@ defmodule Dcca.App.Ro do
 
   defp start_policy(cca), do: cca
   defp reply(session_req), do: {:reply, session_req.cca}
+  defp create_error_response(msg) do 
+    Dcca.SessionRequest.new(cca: msg |> Dcca.Session.Worker.create_cca(5012))
+  end
 
 ######################################################################################################################################
 end
