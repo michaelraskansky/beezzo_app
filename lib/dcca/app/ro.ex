@@ -8,12 +8,14 @@ defmodule Dcca.App.Ro do
   # this method should add a peer session supervisor and record the peer supervisor and peer id in 
   # the active peer db
   def peer_up(_svcName, {_peerRef, cap}, _state) do                      
-    IO.puts "#{__MODULE__}.peer_up"
-    
+
     #Start a session supervisor for the peer and add the peer + supervisor to the Peer ETS
     {_, origin_host} = cap.origin_host
     {_, pid} = Dcca.Session.Supervisor.start
-    Dcca.Peer.Ets.create(list_to_atom(origin_host) , pid)
+
+    origin_host
+      |> list_to_atom
+      |> Dcca.Peer.Ets.create(pid)
 
   end                                                                
 
@@ -21,9 +23,9 @@ defmodule Dcca.App.Ro do
   # We should stop the session supervisor for the peer(delete all sessions) and finally remove the refrence
   # From the active peer db.
   def peer_down(_svcName, {_peerRef, cap}, _state) do                    
-    IO.puts "#{__MODULE__}.peer_down"
 
     {_, origin_host} = cap.origin_host
+
     origin_host
       |> Dcca.Peer.Ets.read
       |> Dcca.Session.Supervisor.stop
@@ -66,12 +68,7 @@ defmodule Dcca.App.Ro do
 ### Private functions ################################################################################################################
 
   defp start_policy(cca), do: cca
-
-  defp reply(session_req) do 
-
-  #cca = session_req.cca
-    {:reply, session_req.cca}
-  end
+  defp reply(session_req), do: {:reply, session_req.cca}
 
 ######################################################################################################################################
 end
