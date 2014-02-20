@@ -3,14 +3,14 @@ defmodule Dcca.Supervisor do
 
   def start_link(opts) do
     IO.puts "#{__MODULE__}.start_link"
-    :supervisor.start_link({:local, :main_supervisor}, __MODULE__, [opts])
+    :supervisor.start_link({:local, :ocs_supervisor_root}, __MODULE__, [opts])
   end
 
   def init(opts) do
     IO.puts "#{__MODULE__}.init"
     children = [
       supervisor(Dcca.Peer.Supervisor, [opts]),
-      worker(Dcca.Peer.ActivePeerDB, [opts]),
+      worker(Dcca.Peer.Ets, [opts]),
       worker(Dcca.Session.Ets, [opts]),
       worker(Dcca.Stack.Main, [opts])
     ]

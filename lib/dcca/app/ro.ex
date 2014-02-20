@@ -2,16 +2,18 @@ Code.require_file "diameter_records.ex", "include"
 Code.require_file "ro_rel6_records.ex", "include"
 
 defmodule Dcca.App.Ro do
-  alias Dcca.Peer.ActivePeerDB, as: ActivePeerDB
+  alias Dcca.Session.Worker, as: SessionWorker
 
+# diameter_app Callbacks ###############################################################################################################
   # this method should add a peer session supervisor and record the peer supervisor and peer id in 
   # the active peer db
   def peer_up(_svcName, {_peerRef, cap}, state) do                      
-    IO.puts "#{__MODULE__}.peer_up(#{inspect cap})"
+    IO.puts "#{__MODULE__}.peer_up"
     
-    #Start a session supervisor for the peer and add the peer + supervisor to the ActivePeerDB
-    Dcca.Session.Supervisor.start
-      |> ActivePeerDB.add(cap)
+    #Start a session supervisor for the peer and add the peer + supervisor to the Peer ETS
+    {_, origin_host} = cap.origin_host
+    {_, pid} = Dcca.Session.Supervisor.start
+    Dcca.Peer.Ets.create(list_to_atom(origin_host) , pid)
 
   end                                                                
 
@@ -20,8 +22,12 @@ defmodule Dcca.App.Ro do
   # From the active peer db.
   def peer_down(_svcName, {_peerRef, cap}, state) do                    
     IO.puts "#{__MODULE__}.peer_down"
-    {_, origin_host} = cap.origin_host
 
+    {_, origin_host} = cap.origin_host
+    origin_host
+      |> Dcca.Peer.Ets.read
+      |> Dcca.Session.Supervisor.stop
+      Dcca.Peer.Ets.delete list_to_atom(origin_host)
   end                                                                
 
   # This method is the callback to handle CCR request.
@@ -32,76 +38,42 @@ defmodule Dcca.App.Ro do
     case msg do
       {:CCR, _, _, _, _, _, _, 1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
         msg
-        |> start_session # This function will create the initial CCA with the reserved units + start the TCC timer
-        |> start_policy  # This function will start the policy yet to be implemented to manipulate AVPs and authorize
-        |> reply         # This function will send the reply bach to diameter stack 
+          |> SessionWorker.initial   # Once the Session FSM has been initilized and register we pass the init
+          |> start_policy            # This function will start the policy yet to be implemented to manipulate AVPs and authorize
+          |> reply                   # This function will send the reply bach to diameter stack 
 
       {:CCR, _, _, _, _, _, _, 2, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
-        update_session(msg)
+        msg
+          |> SessionWorker.update
+          |> start_policy
+          |> reply
 
       {:CCR, _, _, _, _, _, _, 3, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
-        terminate_session(msg)
+        msg 
+          |> SessionWorker.terminate
+          |> start_policy
+          |> reply
 
       {:CCR, _, _, _, _, _, _, 4, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
-        event_request(msg)
+        SessionWorker.event(msg)
+          |> reply
+
+      _ -> :bad_packet
     end
 
   end                             
+######################################################################################################################################
 
+### Private functions ################################################################################################################
 
-### Private functions #####################################################################################################
-
-  defp start_session(ccr) do
-    IO.puts "#{__MODULE__}.start_session"
-
-    # Get the relevent session supervisor for the session
-    # Attempt to add the session and save the result for analasys
-    # This is basically a GenFSM proccess for handaling the sessions life time
-    # After we get the pid we will also have to add a refrence in the active session DB
-    { ccr."Origin-Host", ccr."Session-Id", ccr."Subscription-Id" |> get_imsi_subs_id }
-      |> ActivePeerDB.get
-      |> Dcca.Session.Worker.start_session_fsm
-      |> create_cca(ccr)
-  end
-
-  defp create_cca(res, ccr) do
-    IO.puts "#{__MODULE__}.create_cca(#{inspect res})"
-
-    # Analyse the res and add the result code.
-    # This is very basic error managment, the res from Dcca.Session.Worker.start_session will have to be more specific and then we can 
-    # add more error codes
-    case res do
-      {:ok, _} -> # we have succeeded to add a session add 2001
-        create_cca_rec(ccr, 2001)
-
-      {:error, _} -> # something went wrong add 5003
-        create_cca_rec(ccr, 5003)
-    end
-  end
-
-  defp create_cca_rec(ccr, res_code) do
-    IO.puts "#{__MODULE__}.create_cca_rec(#{inspect ccr})"
-    :CCA.new(
-      "Result-Code": res_code,
-      "Session-Id": ccr."Session-Id", 
-      "Origin-Host": Dcca.Configuration.Main.get_origin_host, 
-      "Origin-Realm": Dcca.Configuration.Main.get_origin_realm, 
-      "Auth-Application-Id": Dcca.Configuration.Main.get_auth_app_id,
-      "CC-Request-Type": ccr."CC-Request-Type",
-      "CC-Request-Number": ccr."CC-Request-Number")
-  end
-
-  # Yet to be impleneted functions, this functions are meant to intearct with a sessions GenFSM based on the
-  # CCR Type
-  defp update_session(ccr), do: ccr
-  defp terminate_session(ccr), do: ccr
-  defp event_request(ccr), do: ccr
   defp start_policy(cca), do: cca
 
-  # Private Helper Functions
-  defp reply(cca), do: {:reply, cca}
-  defp get_imsi_subs_id([head|tail]), do: if(head."Subscription-Id-Type" == 1, do: head."Subscription-Id-Data", else: get_imsi_subs_id(tail))
-  defp get_imsi_subs_id([]), do: :error
+  defp reply(session_req) do 
+    IO.puts "#{__MODULE__}.reply"
 
-#############################################################################################################################
+    cca = session_req.cca
+    {:reply, cca}
+  end
+
+######################################################################################################################################
 end

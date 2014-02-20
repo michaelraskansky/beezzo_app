@@ -345,7 +345,7 @@
   MM-Content-Type	                        1203      Grouped       MV
   MMS-Information	                        877	  Grouped       MV
   MSISDN					701       OctetString   MV
-  Multiple-Services-Credit-Control		456	  Grouped	MV
+  Multiple-Services-Credit-Control		456	  Grouped	M
   Number-Of-Participants	                885	  Unsigned32	MV
   Originating-IOI	                        839	  UTF8String	MV
   Originator	                                864	  Enumerated	MV

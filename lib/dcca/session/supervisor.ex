@@ -3,21 +3,19 @@ defmodule Dcca.Session.Supervisor do
 
   # API Functions
   def start do
-    IO.puts "#{__MODULE__}.start"
+    :supervisor.start_child(:ocs_supervisor_peer, [])
+  end
 
-    :supervisor.start_child(:peer_supervisor, [])
+  def stop(pid) do
+    :supervisor.terminate_child(:ocs_supervisor_peer, pid)
   end
 
   # Supervisor Callback
   def start_link do
-    IO.puts "#{__MODULE__}.start_link"
-
     :supervisor.start_link(__MODULE__, [])
   end
 
   def init(_opts) do
-    IO.puts "#{__MODULE__}.init"
-
     userSpec = {:Dcca.Session.Worker, {:Dcca.Session.Worker, :start_link, []}, :temporary, 2000, :worker, [:Dcca.Session.Worker]}
     startSpecs = {{:simple_one_for_one, 0, 1}, [userSpec]}
 

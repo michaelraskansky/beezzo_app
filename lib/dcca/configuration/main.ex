@@ -1,7 +1,6 @@
 defmodule Dcca.Configuration.Main do
 
   def get_opts do
-    IO.puts "#{__MODULE__}.get_opts"
     ip = {127,0,0,1}
     port = 3868
     transportModule = :diameter_tcp

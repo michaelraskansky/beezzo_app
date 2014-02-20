@@ -1,17 +1,17 @@
-defmodule Dcca.Session.Ets do
+defmodule Dcca.Peer.Ets do
   use GenServer.Behaviour
 
   # API
-  def create(key, data) when is_atom(key), do: :gen_server.cast(:ocs_ets_sessions, {:create, {key, data}})
-  def read(key) when is_atom(key), do: :gen_server.call(:ocs_ets_sessions, {:read, key})
-  def read(key) when is_list(key), do: :gen_server.call(:ocs_ets_sessions, {:read, list_to_atom(key)})
-  def read(key) when is_binary(key), do: :gen_server.call(:ocs_ets_sessions, {:read, binary_to_atom(key)})
+  def create(key, data) when is_atom(key), do: :gen_server.cast(:ocs_ets_peers, {:create, {key, data}})
+  def read(key) when is_atom(key), do: :gen_server.call(:ocs_ets_peers, {:read, key})    
+  def read(key) when is_list(key), do: :gen_server.call(:ocs_ets_peers, {:read, list_to_atom(key)})      
+  def read(key) when is_binary(key), do: :gen_server.call(:ocs_ets_peers, {:read, binary_to_atom(key)})  
   def update(key, data) when is_atom(key), do: create(key, data)
-  def delete(key) when is_atom(key), do: :gen_server.cast(:ocs_ets_sessions, {:delete, key})
+  def delete(key) when is_atom(key), do: :gen_server.cast(:ocs_ets_peers, {:delete, key})
 
   # GenServer Callbacks
   def start_link(_opts) do
-     :gen_server.start_link({:local, :ocs_ets_sessions}, __MODULE__, [], [])
+     :gen_server.start_link({:local, :ocs_ets_peers}, __MODULE__, [], [])
   end
 
   def init(_opts) do

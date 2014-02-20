@@ -1,62 +1,109 @@
+defrecord Dcca.SessionRequest, supervisor: nil, worker: nil, origin: nil, subscription: nil, session: nil ,status: 2001, ccr: :CCR.new, cca: :CCA.new
+
 defmodule Dcca.Session.Worker do
   use GenFSM.Behaviour
 
-  # API functions
-  def start_session_fsm({session_supervisor, peer, session_id, imsi}) when is_pid(session_supervisor) do
-    IO.puts "#{__MODULE__}.start_session(#{inspect session_supervisor}, #{session_id}, #{imsi})"
+# API functions #####################################################################################################################################
+  def initial(ccr) do
 
-    {:ok, pid} = :supervisor.start_child(session_supervisor, [])
-    Dcca.Session.Ets.create(session_id, {imsi, peer, session_id, pid})
-    {:ok, {imsi, peer, session_id, pid}}
+    # Create initial SessionRequest record.
+    session_req = ccr |> create_session_request
+
+    # Set SessionRequest supervisor field.
+    session_req = session_req.origin |> Dcca.Peer.Ets.read |> session_req.supervisor
+
+    # Start GenFSM
+    {:ok, pid} = :supervisor.start_child(session_req.supervisor, [session_req.session])
+  
+    # Set SessionRequest worker field
+    session_req = pid |> session_req.worker
+
+    # Set SessionRequest cca field
+    session_req = session_req |> create_cca |> session_req.cca
+
+    # Send "initial" event to GenFSM this will return the quotas and TCC
+    {_session_id, tcc, multiple_services} = :gen_fsm.sync_send_event(session_req.worker, :initial)
+
+    # Set cca field Multiple-Services field
+    session_req = multiple_services |> session_req.cca."Multiple-Services-Credit-Control" |> session_req.cca 
+
+    # Store user session in the Session ETS
+    Dcca.Session.Ets.create(session_req.session, session_req)
+
+    # return
+    session_req
   end
 
-  def initial_request(session_id, msg) do
-    {_, _, _, pid} = Dcca.Session.Ets.read session_id
-    :gen_fsm.sync_send_event(pid, :initial)
-  end
-  def update_request(session_id, msg) do
-  end
-  def terminate_request(session_id, msg) do
+  def update(msg) do
+    session_req = Dcca.Session.Ets.read(msg."Session-Id")
+    :gen_fsm.sync_send_event(session_req.worker, :update)
   end
 
-  # Supervisor Callbacks
+  def terminate(msg) do
+    session_req = Dcca.Session.Ets.read(msg."Session-Id")
+    :gen_fsm.sync_send_event(session_req.worker, :terminate)
+  end
+####################################################################################################################################################
 
-  def start_link do
-    IO.puts "#{__MODULE__}.start_link"
-
-    :gen_fsm.start_link(__MODULE__, [], [[]])
+# Supervisor Callbacks #############################################################################################################################
+  def start_link(opts) do
+    :gen_fsm.start_link(__MODULE__, [opts], [])
   end
 
-  # GenFSM Callbacks
+  def terminate(_reason, _fsm_state, {session_id, _tcc, _quotas}) do
+      session_id
+        |> List.first
+        |> Dcca.Session.Ets.delete
+  end
+####################################################################################################################################################
 
-  def init(opts) do
-    IO.puts "#{__MODULE__}.init(#{opts})"
+# FSM Callbacks ####################################################################################################################################
+  def init(session_id) do
+    :erlang.process_flag(:trap_exit, true)
 
     # Get Data From DB
-    {:ok, :open, {get_tcc, get_quotas}}
+    {:ok, :open, {session_id, get_tcc, get_quotas}}
   end
 
   def open(:initial, _, session_state), do: {:reply, session_state, :open, session_state }
 
   def open(:update, session_state) do
-    
   end
 
   def open(:terminate, session_state) do
-    
+  end
+#####################################################################################################################################################
+
+# Private Helper Functions ##########################################################################################################################
+  defp get_quotas do
+    [:"Multiple-Services-Credit-Control".new(
+      "Rating-Group": [1],
+      "Validity-Time": [3600],
+      "Result-Code": [2001],
+      "Granted-Service-Unit": [
+        :"Granted-Service-Unit".new("CC-Total-Octets": [52428800])
+      ],
+      "Service-Identifier": [1],
+      "Used-Service-Unit": [:"Used-Service-Unit".new "CC-Input-Octets": [0], "CC-Output-Octets": [0], "CC-Total-Octets": [0]]
+      )]
   end
 
-  # Private Helper Functions
-  defp get_quotas do
-    allowed = :"Multiple-Services-Credit-Control".new(
-      "Rating-Group": 1,
-      "Validity-Time": 3600,
-      "Result-Code": 2001,
-      "Granted-Service-Unit": :"Granted-Service-Unit".new("CC-Total-Octets": 52428800),
-      "Service-Identifier": 1,
-       "Used-Service-Unit": 0
-      )
-    [allowed]
-  end
   defp get_tcc, do: 3600
+  defp get_imsi_subs_id([head|tail]), do: if(head."Subscription-Id-Type" == 1, do: head."Subscription-Id-Data", else: get_imsi_subs_id(tail))
+  defp get_imsi_subs_id([]), do: :error
+
+  defp create_cca(session_req) do
+    :CCA.new(
+      "Result-Code": session_req.status,
+      "Session-Id": session_req.ccr."Session-Id",
+      "Origin-Host": Dcca.Configuration.Main.get_origin_host,
+      "Origin-Realm": Dcca.Configuration.Main.get_origin_realm,
+      "Auth-Application-Id": Dcca.Configuration.Main.get_auth_app_id,
+      "CC-Request-Type": session_req.ccr."CC-Request-Type",
+      "CC-Request-Number": session_req.ccr."CC-Request-Number")
+  end
+  def create_session_request(msg) do
+    Dcca.SessionRequest.new(origin: list_to_atom(msg."Origin-Host"), subscription: list_to_atom(get_imsi_subs_id(msg."Subscription-Id")), session: list_to_atom(msg."Session-Id"), ccr: msg )
+  end
+######################################################################################################################################################
 end

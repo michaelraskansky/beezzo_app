@@ -604,7 +604,7 @@ avp_name(1213, 10415) -> {'Message-Class', 'Grouped'};
 avp_name(1210, 10415) -> {'Message-ID', 'UTF8String'};
 avp_name(1212, 10415) -> {'Message-Size', 'Unsigned32'};
 avp_name(1211, 10415) -> {'Message-Type', 'Enumerated'};
-avp_name(456, 10415) ->
+avp_name(456, undefined) ->
     {'Multiple-Services-Credit-Control', 'Grouped'};
 avp_name(455, undefined) ->
     {'Multiple-Services-Indicator', 'Enumerated'};
@@ -1563,7 +1563,7 @@ avp_header('Message-ID') -> {1210, 192, 10415};
 avp_header('Message-Size') -> {1212, 192, 10415};
 avp_header('Message-Type') -> {1211, 192, 10415};
 avp_header('Multiple-Services-Credit-Control') ->
-    {456, 192, 10415};
+    {456, 64, undefined};
 avp_header('Multiple-Services-Indicator') ->
     {455, 64, undefined};
 avp_header('Node-Functionality') -> {862, 192, 10415};
@@ -3527,7 +3527,7 @@ dict() ->
        {"Message-Size", 1212, "Unsigned32", "MV"},
        {"Message-Type", 1211, "Enumerated", "MV"},
        {"Multiple-Services-Credit-Control", 456, "Grouped",
-	"MV"},
+	"M"},
        {"Multiple-Services-Indicator", 455, "Enumerated", "M"},
        {"Node-Functionality", 862, "Enumerated", "MV"},
        {"Number-Of-Participants", 885, "Unsigned32", "MV"},

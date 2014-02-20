@@ -4,7 +4,7 @@ defmodule Dcca.Peer.Supervisor do
   def start_link(_opts) do
     IO.puts "#{__MODULE__}.start_link"
 
-    :supervisor.start_link({:local, :peer_supervisor}, __MODULE__, [])
+    :supervisor.start_link({:local, :ocs_supervisor_peer}, __MODULE__, [])
   end
 
   def init(_opts) do
