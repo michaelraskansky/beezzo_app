@@ -8,6 +8,7 @@ defmodule Dcca.Session.Worker do
 # API functions #####################################################################################################################################
   def initial(ccr) do
 
+
     # Create initial SessionRequest record.
     session_req = ccr |> create_session_request
 
