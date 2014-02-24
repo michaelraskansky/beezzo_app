@@ -18,6 +18,7 @@
 
 -hrl_name('ro_rel6.hrl').
 
+-compile({parse_transform, rec2json}).
 
 %%% -------------------------------------------------------
 %%% Message records:
