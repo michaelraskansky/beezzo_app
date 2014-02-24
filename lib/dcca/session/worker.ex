@@ -92,8 +92,10 @@ defmodule Dcca.Session.Worker do
     Dcca.Session.Ets.update(session_req.session, session_req)
     session_req
   end
+
   defp get_quotas do
-    [:"Multiple-Services-Credit-Control".new(
+    [
+      :"Multiple-Services-Credit-Control".new(
       "Rating-Group": [1],
       "Validity-Time": [3600],
       "Result-Code": [2001],
@@ -102,7 +104,17 @@ defmodule Dcca.Session.Worker do
       ],
       "Service-Identifier": [1],
       "Used-Service-Unit": [:"Used-Service-Unit".new "CC-Input-Octets": [0], "CC-Output-Octets": [0], "CC-Total-Octets": [0]]
-      )]
+      ),
+      :"Multiple-Services-Credit-Control".new(
+      "Rating-Group": [2],
+      "Validity-Time": [3600],
+      "Result-Code": [2001],
+      "Granted-Service-Unit": [
+        :"Granted-Service-Unit".new("CC-Total-Octets": [52428800])
+      ],
+      "Service-Identifier": [1],
+      "Used-Service-Unit": [:"Used-Service-Unit".new "CC-Input-Octets": [0], "CC-Output-Octets": [0], "CC-Total-Octets": [0]])
+    ]
   end
 
   defp get_tcc, do: 3600

@@ -20,6 +20,8 @@
 
 -compile({parse_transform, diameter_exprecs}).
 
+-compile({parse_transform, rec2json}).
+
 -compile(nowarn_unused_function).
 
 -export_records(['CCR', 'CCA', 'Cost-Information',
