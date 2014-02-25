@@ -9,31 +9,52 @@ defmodule Dcca.Session.Worker do
   def initial(ccr) do
 
     # Create initial SessionRequest record.
-    session_req = ccr |> create_session_request
+    session_req = ccr 
+                  |> create_session_request
 
     # Set SessionRequest supervisor field.
-    session_req = session_req.origin |> Dcca.Peer.Ets.read |> session_req.supervisor
+    session_req = session_req.origin 
+                  |> Dcca.Peer.Ets.read 
+                  |> session_req.supervisor
 
-    # Start GenFSM
-    {:ok, pid} = :supervisor.start_child(session_req.supervisor, [session_req.session])
+    # Get quotas from DB
+    case Dcca.Db.Utils.get_accumulators(session_req.subscription) do
+      {_key, {:error, :key_enoent}} -> # No quotas are avaliable generate cca and stop
+
+        session_req = session_req.status 4012
+        session_req = session_req
+                      |> create_cca
+                      |> session_req.cca
+
+      {:ok, quotas} -> # Got quotas from DB continue 
+
+        # Start GenFSM
+        {:ok, pid} = :supervisor.start_child(session_req.supervisor, [{session_req.session, quotas}])
   
-    # Set SessionRequest worker field
-    session_req = pid |> session_req.worker
+        # Set SessionRequest worker field
+        session_req = pid 
+                      |> session_req.worker
 
-    # Set SessionRequest cca field
-    session_req = session_req |> create_cca |> session_req.cca
+        # Set SessionRequest cca field
+        session_req = session_req 
+                      |> create_cca 
+                      |> session_req.cca
 
-    # Send "initial" event to GenFSM this will return the quotas and TCC
-    {_session_id, _tcc, multiple_services} = :gen_fsm.sync_send_event(session_req.worker, :initial)
+        # Send "initial" event to GenFSM this will return the quotas and TCC
+        {_session_id, _tcc, multiple_services} = :gen_fsm.sync_send_event(session_req.worker, :initial)
 
-    # Set cca field Multiple-Services field
-    session_req = multiple_services |> session_req.cca."Multiple-Services-Credit-Control" |> session_req.cca 
+        # Set cca field Multiple-Services field
+        session_req = multiple_services 
+                      |> Dcca.Db.Utils.accumulator_list_to_record_list 
+                      |> session_req.cca."Multiple-Services-Credit-Control" 
+                      |> session_req.cca 
 
-    # Store user session in the Session ETS
-    Dcca.Session.Ets.create(session_req.session, session_req)
+        # Store user session in the Session ETS
+        Dcca.Session.Ets.create(session_req.session, session_req)
 
-    # return
-    session_req
+        # return
+        session_req
+    end
   end
 
   def update(ccr) do
@@ -59,20 +80,13 @@ defmodule Dcca.Session.Worker do
   end
 
   def terminate(_reason, _fsm_state, {session_id, _tcc, _quotas}) do
-      session_id
-        |> List.first
-        |> Dcca.Session.Ets.delete
+      session_id |> Dcca.Session.Ets.delete
   end
 ####################################################################################################################################################
 
 # FSM Callbacks ####################################################################################################################################
-  def init(session_id) do
+  def init([{session_id, quotas}]) do
     :erlang.process_flag(:trap_exit, true)
-
-    # Get Data From DB
-    quotas = Dcca.Db.Utils.get_accumulators("111") 
-              |> Dcca.Db.Utils.accumulator_list_to_record_list
-
     {:ok, :open, {session_id, get_tcc, quotas}}
   end
 
@@ -96,34 +110,10 @@ defmodule Dcca.Session.Worker do
     session_req
   end
 
-  def get_quotas do
-    [
-      :"Multiple-Services-Credit-Control".new(
-      "Rating-Group": [1],
-      "Validity-Time": [3600],
-      "Result-Code": [2001],
-      "Granted-Service-Unit": [
-        :"Granted-Service-Unit".new("CC-Total-Octets": [52428800])
-      ],
-      "Service-Identifier": [1],
-      "Used-Service-Unit": [:"Used-Service-Unit".new "CC-Input-Octets": [0], "CC-Output-Octets": [0], "CC-Total-Octets": [0]]
-      ),
-      :"Multiple-Services-Credit-Control".new(
-      "Rating-Group": [2],
-      "Validity-Time": [3600],
-      "Result-Code": [2001],
-      "Granted-Service-Unit": [
-        :"Granted-Service-Unit".new("CC-Total-Octets": [52428800])
-      ],
-      "Service-Identifier": [1],
-      "Used-Service-Unit": [:"Used-Service-Unit".new "CC-Input-Octets": [0], "CC-Output-Octets": [0], "CC-Total-Octets": [0]])
-    ]
-  end
-
   defp get_tcc, do: 3600
   defp get_imsi_subs_id(subs_id), do: lc(id inlist subs_id, id."Subscription-Id-Type"==1 , do: id."Subscription-Id-Data") |> List.first
 
-  defp create_cca(session_req), do: create_cca(session_req.ccr, session_req.status) 
+  def create_cca(session_req), do: create_cca(session_req.ccr, session_req.status) 
   def create_cca(ccr, status) do
     CCA.new(
       "Result-Code": status,

@@ -3,10 +3,14 @@ defmodule Dcca.Db.Utils do
     lc accu inlist :proplists.get_keys(accumulators), do: :proplists.get_value(accu, accumulators) |> accumulator_to_record
   end
   def get_accumulators(pool \\ :db, subscription) do
-    {_, _, data} = :cberl.get pool, subscription
-    data = data |> :jiffy.decode
-    {data} = :ej.get {"Multiple-Services-Credit-Control"}, data
-    data
+    case :cberl.get pool, atom_to_binary(subscription) do
+      {_, _, data} ->
+        data = data |> :jiffy.decode
+        {data} = :ej.get {"Multiple-Services-Credit-Control"}, data
+        {:ok, data}
+      error = {_key, {:error, :key_enoent}} ->
+        error
+    end
   end
   def accumulator_to_record(accumulator) do
     :"Multiple-Services-Credit-Control".new(
