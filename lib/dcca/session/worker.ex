@@ -1,13 +1,12 @@
 # TODO: Implement init fro crash or initial request behaviour, if from crash take from DB else from msg
 
-defrecord Dcca.SessionRequest, supervisor: nil, worker: nil, origin: nil, subscription: nil, session: nil ,status: 2001, ccr: :CCR.new, cca: :CCA.new
+defrecord Dcca.SessionRequest, supervisor: nil, worker: nil, origin: nil, subscription: nil, session: nil ,status: 2001, ccr: CCR.new, cca: CCA.new
 
 defmodule Dcca.Session.Worker do
   use GenFSM.Behaviour
 
 # API functions #####################################################################################################################################
   def initial(ccr) do
-
 
     # Create initial SessionRequest record.
     session_req = ccr |> create_session_request
@@ -71,7 +70,10 @@ defmodule Dcca.Session.Worker do
     :erlang.process_flag(:trap_exit, true)
 
     # Get Data From DB
-    {:ok, :open, {session_id, get_tcc, get_quotas}}
+    quotas = Dcca.Db.Utils.get_accumulators("111") 
+              |> Dcca.Db.Utils.accumulator_list_to_record_list
+
+    {:ok, :open, {session_id, get_tcc, quotas}}
   end
 
   def open(:initial, _from, session_state), do: {:reply, session_state, :open, session_state }
@@ -94,7 +96,7 @@ defmodule Dcca.Session.Worker do
     session_req
   end
 
-  defp get_quotas do
+  def get_quotas do
     [
       :"Multiple-Services-Credit-Control".new(
       "Rating-Group": [1],
@@ -123,7 +125,7 @@ defmodule Dcca.Session.Worker do
 
   defp create_cca(session_req), do: create_cca(session_req.ccr, session_req.status) 
   def create_cca(ccr, status) do
-    :CCA.new(
+    CCA.new(
       "Result-Code": status,
       "Session-Id": ccr."Session-Id",
       "Origin-Host": Dcca.Configuration.Main.get_origin_host,

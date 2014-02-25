@@ -1,5 +1,12 @@
 defrecord :"CCR", Record.Extractor.retrieve(:"CCR", from: "src/ro_rel6.hrl")
+defrecord CCR, Record.Extractor.retrieve(:"CCR", from: "src/ro_rel6.hrl")
+
 defrecord :"CCA", Record.Extractor.retrieve(:"CCA", from: "src/ro_rel6.hrl")
+defrecord CCA, Record.Extractor.retrieve(:"CCA", from: "src/ro_rel6.hrl")
+
+defrecord :"Multiple-Services-Credit-Control", Record.Extractor.retrieve(:"Multiple-Services-Credit-Control", from: "src/ro_rel6.hrl")
+defrecord Multiple_Services_Credit_Control, Record.Extractor.retrieve(:"Multiple-Services-Credit-Control", from: "src/ro_rel6.hrl")
+
 defrecord :"Cost-Information", Record.Extractor.retrieve(:"Cost-Information", from: "src/ro_rel6.hrl")
 defrecord :"Unit-Value", Record.Extractor.retrieve(:"Unit-Value", from: "src/ro_rel6.hrl")
 defrecord :"Granted-Service-Unit", Record.Extractor.retrieve(:"Granted-Service-Unit", from: "src/ro_rel6.hrl")
@@ -12,7 +19,6 @@ defrecord :"Redirect-Server", Record.Extractor.retrieve(:"Redirect-Server", from
 defrecord :"Service-Parameter-Info", Record.Extractor.retrieve(:"Service-Parameter-Info", from: "src/ro_rel6.hrl")
 defrecord :"Subscription-Id", Record.Extractor.retrieve(:"Subscription-Id", from: "src/ro_rel6.hrl")
 defrecord :"User-Equipment-Info", Record.Extractor.retrieve(:"User-Equipment-Info", from: "src/ro_rel6.hrl")
-defrecord :"Multiple-Services-Credit-Control", Record.Extractor.retrieve(:"Multiple-Services-Credit-Control", from: "src/ro_rel6.hrl")
 defrecord :"Additional-Content-Information", Record.Extractor.retrieve(:"Additional-Content-Information", from: "src/ro_rel6.hrl")
 defrecord :"Address-Domain", Record.Extractor.retrieve(:"Address-Domain", from: "src/ro_rel6.hrl")
 defrecord :"Application-Server-Information", Record.Extractor.retrieve(:"Application-Server-Information", from: "src/ro_rel6.hrl")
@@ -47,3 +53,13 @@ defrecord :"Experimental-Result", Record.Extractor.retrieve(:"Experimental-Resul
 defrecord :"Vendor-Specific-Application-Id", Record.Extractor.retrieve(:"Vendor-Specific-Application-Id", from: "src/ro_rel6.hrl")
 defrecord :"E2E-Sequence", Record.Extractor.retrieve(:"E2E-Sequence", from: "src/ro_rel6.hrl")
 
+defmodule RecordHelpers do
+  def rec_converter(rec = CCR[]), do: set_elem(rec, 0, :CCR)
+  def rec_converter(rec = :CCR[]), do: set_elem(rec, 0, CCR)
+
+  def rec_converter(rec = CCA[]), do: set_elem(rec, 0, :CCA)
+  def rec_converter(rec = :CCA[]), do: set_elem(rec, 0, CCA)
+
+  def rec_converter(rec = Multiple_Services_Credit_Control[]), do: set_elem(rec, 0, :"Multiple-Services-Credit-Control")
+  def rec_converter(rec = :"Multiple-Services-Credit-Control"[]), do: set_elem(rec, 0, Multiple_Services_Credit_Control)
+end

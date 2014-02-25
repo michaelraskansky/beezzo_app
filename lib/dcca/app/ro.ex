@@ -35,27 +35,31 @@ defmodule Dcca.App.Ro do
   # This method is the callback to handle CCR request.
   # The case pattern mathched the request type and send it to the correct flow for the message
   def handle_request({:diameter_packet, _header, _avps, msg, _bin, _errors, _transport_data} ,_,_state) do
+
+    msg = RecordHelpers.rec_converter(msg)
+
     try do
       case msg do
-        {:CCR, _, _, _, _, _, _, 1, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
+
+        CCR["CC-Request-Type": 1] ->
           msg
             |> SessionWorker.initial   # Once the Session FSM has been initilized and register we pass the init
             |> start_policy            # This function will start the policy yet to be implemented to manipulate AVPs and authorize
             |> reply                   # This function will send the reply bach to diameter stack 
 
-        {:CCR, _, _, _, _, _, _, 2, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
+        CCR["CC-Request-Type": 2] ->
           msg
             |> SessionWorker.update
             |> start_policy
             |> reply
 
-        {:CCR, _, _, _, _, _, _, 3, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
+        CCR["CC-Request-Type": 3] -> 
           msg 
             |> SessionWorker.terminate
             |> start_policy
             |> reply
 
-        {:CCR, _, _, _, _, _, _, 4, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _} ->
+        CCR["CC-Request-Type": 4] ->
           msg
             |> SessionWorker.event
             |> reply
@@ -72,7 +76,7 @@ defmodule Dcca.App.Ro do
 ### Private functions ################################################################################################################
 
   defp start_policy(cca), do: cca
-  defp reply(session_req), do: {:reply, session_req.cca}
+  defp reply(session_req), do: {:reply, session_req.cca |> RecordHelpers.rec_converter}
   defp create_error_response(msg) do 
     Dcca.SessionRequest.new(cca: msg |> Dcca.Session.Worker.create_cca(5012))
   end

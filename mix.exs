@@ -19,6 +19,7 @@ defmodule Dcca.Mixfile do
       mod: { Dcca, [] }, 
       applications: [
         :diameter
+        #:cberl
       ]
     ]
   end
@@ -31,7 +32,7 @@ defmodule Dcca.Mixfile do
   defp deps do
     [
       { :cberl, github: "chitika/cberl" },
-      { :rec2json, github: "lordnull/rec2json" }
+      { :ej, github: "seth/ej" },
     ]
   end
 end
