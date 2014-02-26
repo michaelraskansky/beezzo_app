@@ -33,6 +33,8 @@ defmodule Dcca.Mixfile do
     [
       { :cberl, github: "chitika/cberl" },
       { :ej, github: "seth/ej" },
+      { :exlager, github: "khia/exlager" },
+      { :gproc, github: "uwiger/gproc" }
     ]
   end
 end

@@ -37,7 +37,7 @@ defmodule Dcca.App.Ro do
   def handle_request({:diameter_packet, _header, _avps, msg, _bin, _errors, _transport_data} ,_,_state) do
     msg = RecordHelpers.rec_converter(msg)
 
-    try do
+    #try do
       case msg do
 
         CCR["CC-Request-Type": 1] ->
@@ -63,12 +63,12 @@ defmodule Dcca.App.Ro do
             |> SessionWorker.event
             |> reply
       end
-      catch e, r  ->
-        IO.puts "#{__MODULE__}.handle_request exception! #{e} #{r}"
-        msg
-          |> create_error_response
-          |> reply
-        end
+    # catch e, r  ->
+      #    IO.puts "#{__MODULE__}.handle_request exception! #{e} #{r}"
+      #  msg
+      #    |> create_error_response
+      #    |> reply
+      #  end
   end                             
 ######################################################################################################################################
 
