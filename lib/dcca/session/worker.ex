@@ -7,28 +7,23 @@ defmodule Dcca.Session.Worker do
 
 # API functions #####################################################################################################################################
   def initial(ccr) do
-    {:ok, pid} = ccr."Origin-Host" |> Dcca.Peer.Ets.read |> :supervisor.start_child([ccr])
+    [supervisor_pid] = :gproc.lookup_pids {:n, :l, {:peer, list_to_atom(ccr."Origin-Host")}}
+    {:ok, pid} = :supervisor.start_child(supervisor_pid, [ccr])
     :gen_fsm.sync_send_event(pid, :initial)
   end
 
   def update(ccr) do
-    session_req = update_ets(ccr)
-    :gen_fsm.sync_send_event(session_req.pid, :update)
+    [worker_pid] = :gproc.lookup_pids {:n, :l, {:session, list_to_atom(ccr."Session-Id")}}
+    :gen_fsm.sync_send_event(worker_pid, :update)
   end
 
   def terminate(ccr) do
-    session_req = update_ets(ccr)
-    :gen_fsm.sync_send_event(session_req.pid, :terminate)
+    [worker_pid] = :gproc.lookup_pids {:n, :l, {:session, list_to_atom(ccr."Session-Id")}}
+    :gen_fsm.sync_send_event(worker_pid, :terminate)
   end
-####################################################################################################################################################
 
-# Supervisor Callbacks #############################################################################################################################
   def start_link(opts) do
     :gen_fsm.start_link(__MODULE__, [opts], [])
-  end
-
-  def terminate(_reason, _fsm_state, session_req) do
-      session_req.session |> Dcca.Session.Ets.delete
   end
 ####################################################################################################################################################
 
@@ -49,36 +44,38 @@ defmodule Dcca.Session.Worker do
       {:ok, quotas} ->  
         session_req = 2001 |> session_req.cca."Result-Code" |> session_req.cca
         session_req = quotas |> session_req.quotas
+        
+        # This part has to be done in the idle state when the initial is recived.
+        # We have to add a logig that decided which of the services will be added to the CCA
+        # based on what is provisioned + what was requested.
         session_req = session_req.quotas
                       |> Dcca.Db.Utils.accumulator_list_to_record_list
                       |> session_req.cca."Multiple-Services-Credit-Control"
                       |> session_req.cca
 
-        # create user session in the Session ETS move to gproc
-        Dcca.Session.Ets.create(session_req.session, session_req)
+        # register user proccess
+        :gproc.reg {:n, :l, {:session, list_to_atom(ccr."Session-Id")}}, []
     end
 
-    {:ok, :open, session_req}
-
+    {:ok, :idle, session_req}
   end
 
-  def open(:initial, _from, session_req) do 
-
-    multiple_services = session_req.ccr."Multiple-Services-Credit-Control"
-    # add check if multiple services empty logic and etc.
-    # need to compute what services to allow base on quotas and multiple services
-    {:reply,session_req, :open, session_req }
+  def idle(:initial, _from, session_req) do
+    {:reply, session_req, :open, session_req }
   end
 
   def open(:update, _from, session_req) do
-    multiple_services = session_req.ccr."Multiple-Services-Credit-Control"
-
     {:reply, session_req, :open, session_req }
-
   end
 
   def open(:terminate, _from, session_req) do
     {:reply, session_req, :open, session_req }
+  end
+
+  def open(:tcc_expired, session_req) do
+  end
+
+  def terminate(_reason, _fsm_state, _session_req) do
   end
 #####################################################################################################################################################
 
@@ -87,18 +84,6 @@ defmodule Dcca.Session.Worker do
   defp update_quotas(new, old) do
     IO.puts inspect "Updating Quotas"
     :ok
-  end
-
-  defp update_ets(ccr) do
-
-    session_req = Dcca.Session.Ets.read(ccr."Session-Id")
-    session_req = ccr 
-                  |> session_req.ccr
-    session_req = session_req.ccr
-                  |> create_cca 
-                  |> session_req.cca
-    Dcca.Session.Ets.update(session_req.session, session_req)
-    session_req
   end
 
   def create_session_request(msg) do

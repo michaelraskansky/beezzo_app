@@ -18,8 +18,9 @@ defmodule Dcca.Mixfile do
     [
       mod: { Dcca, [] }, 
       applications: [
-        :diameter
-        #:cberl
+        :diameter,
+        :gproc,
+        :cberl
       ]
     ]
   end

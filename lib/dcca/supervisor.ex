@@ -10,8 +10,6 @@ defmodule Dcca.Supervisor do
     IO.puts "#{__MODULE__}.init"
     children = [
       supervisor(Dcca.Peer.Supervisor, [opts]),
-      worker(Dcca.Peer.Ets, [opts]),
-      worker(Dcca.Session.Ets, [opts]),
       worker(Dcca.Stack.Main, [opts])
     ]
     supervise(children, strategy: :one_for_one)

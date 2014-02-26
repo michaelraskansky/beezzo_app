@@ -8,7 +8,7 @@ defmodule Dcca.Peer.Supervisor do
   end
 
   def init(_opts) do
-    IO.puts "#{__MODULE__}.init"
+    IO.puts "#{__MODULE__}.initfdsfdsfs"
 
     userSpec = {:Dcca.Session.Supervisor, {:Dcca.Session.Supervisor, :start_link, []}, :temporary, 2000, :supervisor, [:Dcca.Session.Supervisor]}
     startSpecs = {{:simple_one_for_one, 0, 1}, [userSpec]}

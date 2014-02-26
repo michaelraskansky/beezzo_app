@@ -11,11 +11,7 @@ defmodule Dcca.App.Ro do
 
     #Start a session supervisor for the peer and add the peer + supervisor to the Peer ETS
     {_, origin_host} = cap.origin_host
-    {_, pid} = Dcca.Session.Supervisor.start
-
-    origin_host
-      |> list_to_atom
-      |> Dcca.Peer.Ets.create(pid)
+    {_, pid} = Dcca.Session.Supervisor.start(origin_host)
 
   end                                                                
 
@@ -23,13 +19,8 @@ defmodule Dcca.App.Ro do
   # We should stop the session supervisor for the peer(delete all sessions) and finally remove the refrence
   # From the active peer db.
   def peer_down(_svcName, {_peerRef, cap}, _state) do                    
-
     {_, origin_host} = cap.origin_host
-
-    origin_host
-      |> Dcca.Peer.Ets.read
-      |> Dcca.Session.Supervisor.stop
-      Dcca.Peer.Ets.delete list_to_atom(origin_host)
+    Dcca.Session.Supervisor.stop(origin_host)
   end                                                                
 
   # This method is the callback to handle CCR request.
