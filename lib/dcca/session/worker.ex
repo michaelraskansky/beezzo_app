@@ -14,7 +14,7 @@ defmodule Dcca.Session.Worker do
 
   def update(ccr) do
     [worker_pid] = :gproc.lookup_pids {:n, :l, {:session, list_to_atom(ccr."Session-Id")}}
-    :gen_fsm.sync_send_event(worker_pid, :update)
+    :gen_fsm.sync_send_event(worker_pid, {:update, ccr})
   end
 
   def terminate(ccr) do
@@ -39,10 +39,10 @@ defmodule Dcca.Session.Worker do
     case Dcca.Db.Utils.get_accumulators(session_req.subscription) do
       
       { _key, { :error, :key_enoent } } -> 
-        session_req = 4012 |> session_req.cca."Result-Code" |> session_req.cca
+        session_req = update_session_req_result(session_req, 4012)
 
       {:ok, quotas} ->  
-        session_req = 2001 |> session_req.cca."Result-Code" |> session_req.cca
+        session_req = update_session_req_result(session_req, 2001)
         session_req = quotas |> session_req.quotas
         
         # This part has to be done in the idle state when the initial is recived.
@@ -61,10 +61,25 @@ defmodule Dcca.Session.Worker do
   end
 
   def idle(:initial, _from, session_req) do
-    {:reply, session_req, :open, session_req }
+    case evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas) do
+
+      {:ok, :nothing_requested} ->
+        {:reply, session_req, :open, session_req }
+
+      {:ok, :services_allowed} ->
+        {:reply, session_req, :open, session_req }
+
+    end
   end
 
-  def open(:update, _from, session_req) do
+  def open({:update, ccr}, _from, session_req) do
+
+    session_req = update_session_req_cca(session_req, ccr)
+
+    evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas)
+
+    session_req = update_session_req_result(session_req, 2001)
+
     {:reply, session_req, :open, session_req }
   end
 
@@ -80,6 +95,20 @@ defmodule Dcca.Session.Worker do
 #####################################################################################################################################################
 
 # Private Helper Functions ##########################################################################################################################
+
+  defp update_session_req_cca(session_req, ccr) do
+    session_req = session_req.ccr ccr
+    session_req.cca(create_cca(ccr))
+  end
+
+  defp update_session_req_result(session_req, code) do
+    code |> session_req.cca."Result-Code" |> session_req.cca
+  end
+
+  defp evaluate_quotas([], _quotas), do: {:ok, :nothing_requested}
+  defp evaluate_quotas(multiple_service, quotas) do
+    :ok
+  end
   
   defp update_quotas(new, old) do
     IO.puts inspect "Updating Quotas"
