@@ -35,7 +35,6 @@ defmodule Dcca.App.Ro do
   # This method is the callback to handle CCR request.
   # The case pattern mathched the request type and send it to the correct flow for the message
   def handle_request({:diameter_packet, _header, _avps, msg, _bin, _errors, _transport_data} ,_,_state) do
-
     msg = RecordHelpers.rec_converter(msg)
 
     try do
@@ -65,7 +64,7 @@ defmodule Dcca.App.Ro do
             |> reply
       end
       catch e, r  ->
-        IO.puts "#{__MODULE__}.handle_request exception!#{e} #{r}"
+        IO.puts "#{__MODULE__}.handle_request exception! #{e} #{r}"
         msg
           |> create_error_response
           |> reply
