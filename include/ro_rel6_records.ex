@@ -62,4 +62,6 @@ defmodule RecordHelpers do
 
   def rec_converter(rec = Multiple_Services_Credit_Control[]), do: set_elem(rec, 0, :"Multiple-Services-Credit-Control")
   def rec_converter(rec = :"Multiple-Services-Credit-Control"[]), do: set_elem(rec, 0, Multiple_Services_Credit_Control)
+
+  def list_rec_converter(list) when is_list(list), do: lc(rec inlist list, do: rec_converter(rec))
 end
