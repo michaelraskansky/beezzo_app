@@ -61,22 +61,15 @@ defmodule Dcca.Session.Worker do
   end
 
   def idle(:initial, _from, session_req) do
-    case evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas) do
-
-      {:ok, :nothing_requested} ->
-        {:reply, session_req, :open, session_req }
-
-      {:ok, :services_allowed} ->
-        {:reply, session_req, :open, session_req }
-
-    end
+    #Dcca.Session.Quota.evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas)
+    {:reply, session_req, :open, session_req }
   end
 
   def open({:update, ccr}, _from, session_req) do
 
     session_req = update_session_req_cca(session_req, ccr)
 
-    evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas)
+    #Dcca.Session.Quota.evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas)
 
     session_req = update_session_req_result(session_req, 2001)
 
@@ -103,16 +96,6 @@ defmodule Dcca.Session.Worker do
 
   defp update_session_req_result(session_req, code) do
     code |> session_req.cca."Result-Code" |> session_req.cca
-  end
-
-  defp evaluate_quotas([], _quotas), do: {:ok, :nothing_requested}
-  defp evaluate_quotas(multiple_service, quotas) do
-    :ok
-  end
-  
-  defp update_quotas(new, old) do
-    IO.puts inspect "Updating Quotas"
-    :ok
   end
 
   def create_session_request(msg) do

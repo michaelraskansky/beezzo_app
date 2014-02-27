@@ -20,6 +20,7 @@ defmodule Dcca.Mixfile do
       applications: [
         :diameter,
         :gproc,
+        :poolboy,
         :cberl
       ]
     ]

@@ -13,22 +13,25 @@ defmodule Dcca.Db.Utils do
     end
   end
   def accumulator_to_record(accumulator) do
+    IO.puts inspect :ej.get({"Rating-Group"}, accumulator)
     :"Multiple-Services-Credit-Control".new(
-      "Rating-Group": [:ej.get({"Rating-Group"}, accumulator)],
-      "Validity-Time": [:ej.get({"Validity-Time"}, accumulator)],
-      "Service-Identifier": [:ej.get({"Service-Identifier"}, accumulator)],
+      "Service-Identifier": :ej.get({"Service-Identifier"}, accumulator) |> check_udefined,
+      "Rating-Group": :ej.get({"Rating-Group"}, accumulator) |> check_udefined,
+      "Validity-Time": :ej.get({"Validity-Time"}, accumulator) |> check_udefined,
       "Granted-Service-Unit": [
         :"Granted-Service-Unit".new(
-          "CC-Total-Octets": [:ej.get({"Granted-Service-Unit", "CC-Total-Octets"}, accumulator)], 
-          "CC-Input-Octets": [:ej.get({"Granted-Service-Unit", "CC-Input-Octets"}, accumulator)], 
-          "CC-Output-Octets": [:ej.get({"Granted-Service-Unit", "CC-Output-Octets"}, accumulator)])
+          "CC-Total-Octets": :ej.get({"Granted-Service-Unit", "CC-Total-Octets"}, accumulator) |> check_udefined, 
+          "CC-Input-Octets": :ej.get({"Granted-Service-Unit", "CC-Input-Octets"}, accumulator) |> check_udefined, 
+          "CC-Output-Octets": :ej.get({"Granted-Service-Unit", "CC-Output-Octets"}, accumulator) |> check_udefined)
       ],
       "Used-Service-Unit": [
         :"Used-Service-Unit".new(
-          "CC-Total-Octets": [:ej.get({"Used-Service-Unit", "CC-Total-Octets"}, accumulator)],
-          "CC-Input-Octets": [:ej.get({"Used-Service-Unit", "CC-Input-Octets"}, accumulator)],
-          "CC-Output-Octets": [:ej.get({"Used-Service-Unit", "CC-Output-Octets"}, accumulator)])
+          "CC-Total-Octets": :ej.get({"Used-Service-Unit", "CC-Total-Octets"}, accumulator)|> check_udefined,
+          "CC-Input-Octets": :ej.get({"Used-Service-Unit", "CC-Input-Octets"}, accumulator)|> check_udefined,
+          "CC-Output-Octets": :ej.get({"Used-Service-Unit", "CC-Output-Octets"}, accumulator)|> check_udefined)
       ]
     ) 
   end
+  def check_udefined(:undefined), do: []
+  def check_udefined(x), do: [x]
 end
