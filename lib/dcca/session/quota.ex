@@ -1,4 +1,3 @@
-
 defmodule Dcca.Session.Quota do
 
   # if nothing is requestes do nothing
@@ -11,7 +10,6 @@ defmodule Dcca.Session.Quota do
     quotas = Dcca.Db.Utils.accumulator_list_to_record_list(quotas)
     quotas = lc quota inlist quotas, do: RecordHelpers.rec_converter(quota)
     res = lc multi inlist multis, do: evaluate_quotas_2(multi, quotas)
-    IO.puts inspect res
   end
 
   # This evaluates specific multi with all avaliable quotas

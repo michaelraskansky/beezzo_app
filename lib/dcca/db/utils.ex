@@ -13,7 +13,6 @@ defmodule Dcca.Db.Utils do
     end
   end
   def accumulator_to_record(accumulator) do
-    IO.puts inspect :ej.get({"Rating-Group"}, accumulator)
     :"Multiple-Services-Credit-Control".new(
       "Service-Identifier": :ej.get({"Service-Identifier"}, accumulator) |> check_udefined,
       "Rating-Group": :ej.get({"Rating-Group"}, accumulator) |> check_udefined,
