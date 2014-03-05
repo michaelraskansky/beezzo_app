@@ -45,31 +45,34 @@ defmodule Dcca.Session.Worker do
         session_req = update_session_req_result(session_req, 2001)
         session_req = quotas |> session_req.quotas
         
-        # This part has to be done in the idle state when the initial is recived.
-        # We have to add a logig that decided which of the services will be added to the CCA
-        # based on what is provisioned + what was requested.
-        session_req = session_req.quotas
-                      |> Dcca.Db.Utils.accumulator_list_to_record_list
-                      |> session_req.cca."Multiple-Services-Credit-Control"
-                      |> session_req.cca
-
         # register user proccess
         :gproc.reg {:n, :l, {:session, list_to_atom(ccr."Session-Id")}}, []
     end
 
     {:ok, :idle, session_req}
   end
-
   def idle(:initial, _from, session_req) do
-    #Dcca.Session.Quota.evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas)
-    {:reply, session_req, :open, session_req }
+    case Dcca.Session.Quota.evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas) do
+
+      {:ok, :nothing_requested} ->
+        {:reply, session_req, :open, session_req }
+
+      {multiple_services_reply, updated_quotas} ->
+        session_req = session_req.cca(session_req.cca."Multiple-Services-Credit-Control"(multiple_services_reply))
+        session_req = session_req.quotas updated_quotas
+
+    end
   end
 
   def open({:update, ccr}, _from, session_req) do
 
     session_req = update_session_req_cca(session_req, ccr)
 
-    Dcca.Session.Quota.evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas)
+    {multiple_services_reply, updated_quotas} = Dcca.Session.Quota.evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas)
+    IO.puts inspect multiple_services_reply
+
+    session_req = session_req.cca(session_req.cca."Multiple-Services-Credit-Control"(multiple_services_reply))
+    session_req = session_req.quotas updated_quotas
 
     session_req = update_session_req_result(session_req, 2001)
 
@@ -83,7 +86,8 @@ defmodule Dcca.Session.Worker do
   def open(:tcc_expired, session_req) do
   end
 
-  def terminate(_reason, _fsm_state, _session_req) do
+  def terminate(_reason, _fsm_state, session_req) do
+    IO.puts inspect session_req.quotas
   end
 #####################################################################################################################################################
 
