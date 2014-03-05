@@ -21,16 +21,18 @@ defmodule Dcca.Session.Quota do
 
     multiple_services_reply = Enum.map(granted, &(prepare_multiple_services(&1)))
 
+    IO.puts inspect granted
+
     updated_quotas = granted
                       |> Enum.filter(fn {stat, _, _} -> stat == :quota_granted end)
                       |> Enum.map(&(requested_to_granted(&1)))
-                      |> Enum.scan({quotas}, &(update_quotas(&1, &2)))
+                      |> Enum.scan(quotas, &(update_quotas(&1, &2)))
                       |> List.last
 
-    {updated_quotas, multiple_services_reply}
+    {multiple_services_reply, updated_quotas}
 
   end
-  def accumulator_list_to_tagged_record_list(accumulators) do
+  def accumulator_list_to_tagged_record_list({accumulators}) do
     lc accu inlist :proplists.get_keys(accumulators), do: {accu, :proplists.get_value(accu, accumulators) |> Dcca.Db.Utils.accumulator_to_record}
   end
   def list_rec_converter(to_records) do 
@@ -54,11 +56,13 @@ defmodule Dcca.Session.Quota do
 
   # Evaluate one multi to one quota
   defp evaluate_quotas_3(multi, quota) do
+    IO.puts inspect multi
 
     service_identifier_tup = { multi."Service-Identifier", quota."Service-Identifier" }
     rating_group_tup = { multi."Rating-Group", quota."Rating-Group" }
     [requested_service_unit] = multi."Requested-Service-Unit"
     [granted_service_unit] = quota."Granted-Service-Unit"
+
 
     cc_total_octets_tup = { requested_service_unit."CC-Total-Octets",  granted_service_unit."CC-Total-Octets" }
     cc_input_octets_tup = { requested_service_unit."CC-Input-Octets",  granted_service_unit."CC-Input-Octets" }

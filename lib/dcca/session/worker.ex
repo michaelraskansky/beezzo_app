@@ -69,7 +69,7 @@ defmodule Dcca.Session.Worker do
 
     session_req = update_session_req_cca(session_req, ccr)
 
-    #Dcca.Session.Quota.evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas)
+    Dcca.Session.Quota.evaluate_quotas(session_req.ccr."Multiple-Services-Credit-Control", session_req.quotas)
 
     session_req = update_session_req_result(session_req, 2001)
 
