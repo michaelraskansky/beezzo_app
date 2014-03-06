@@ -1,9 +1,16 @@
 defmodule CLI do
-  def list_sessions(peer \\ :"chacli-01") do
-    pids = :gproc.lookup_pids({:n, :l, {:peer, peer}}) |> List.first |> :supervisor.which_children |> Enum.take 150
-    lc tup inlist pids do
-      {_,pid,_,_} = tup
-      pid
-    end
+
+  def list_peers do
+    match = {{:n, :l, {:peer, :_}},:_, :_}
+    gaurd = []
+    res = [:"$$"]
+    :gproc.select([{match, gaurd, res}])
+  end
+
+  def list_sessions do
+    match = {{:n, :l, {:session, :_}},:_, :_}
+    gaurd = []
+    res = [:"$$"]
+    :gproc.select([{match, gaurd, res}]) |> Enum.take 50
   end
 end

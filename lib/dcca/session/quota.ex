@@ -1,25 +1,29 @@
 defmodule Dcca.Session.Quota do
 
-  def evaluate_quotas([], _quotas), do: {:ok, :nothing_requested}
-  def evaluate_quotas(multis, quotas) do
+  def evaluate_quotas(session_req = Dcca.SessionRequest[ccr: CCR["Multiple-Services-Credit-Control": []]]), do: {:ok, session_req}
+  def evaluate_quotas(session_req) do
 
-    multis =  RecordHelpers.list_rec_converter(multis)
+    quotas = session_req.quotas
+
+    multis =  RecordHelpers.list_rec_converter(session_req.ccr."Multiple-Services-Credit-Control")
 
     quotas_tr = quotas 
-              |> accumulator_list_to_tagged_record_list
-              |> list_rec_converter
+                |> accumulator_list_to_tagged_record_list
+                |> list_rec_converter
 
     granted = lc(multi inlist multis, do: evaluate_quotas_2(multi, quotas_tr)) 
 
     multiple_services_reply = Enum.map(granted, &(prepare_multiple_services(&1)))
 
     updated_quotas = granted
-                      |> Enum.filter(fn {stat, _, _} -> stat == :quota_granted end)
-                      |> Enum.scan(quotas, &(update_quotas(&1, &2)))
-                      |> List.last
+                     |> Enum.filter(fn {stat, _, _} -> stat == :quota_granted end)
+                     |> Enum.scan(quotas, &(update_quotas(&1, &2)))
+                     |> List.last
 
     denilify = fn x -> if x == nil, do: quotas, else: x end
-    {multiple_services_reply, denilify.(updated_quotas)}
+    session_req = session_req.cca(session_req.cca."Multiple-Services-Credit-Control"(multiple_services_reply))
+    session_req = session_req.quotas denilify.(updated_quotas)
+    {:ok, session_req}
 
   end
 
@@ -174,9 +178,29 @@ defmodule Dcca.Session.Quota do
   defp get_used_service_unit([used_service_unit]), do: used_service_unit
 
   defp accumulator_list_to_tagged_record_list({accumulators}) do
-    lc accu inlist :proplists.get_keys(accumulators), do: {accu, :proplists.get_value(accu, accumulators) |> Dcca.Db.Utils.accumulator_to_record}
+    lc accu inlist :proplists.get_keys(accumulators), do: {accu, :proplists.get_value(accu, accumulators) |> accumulator_to_record}
   end
-
+  def accumulator_to_record(accumulator) do
+    :"Multiple-Services-Credit-Control".new(
+      "Service-Identifier": :ej.get({"Service-Identifier"}, accumulator) |> check_udefined,
+      "Rating-Group": :ej.get({"Rating-Group"}, accumulator) |> check_udefined,
+      "Validity-Time": :ej.get({"Validity-Time"}, accumulator) |> check_udefined,
+      "Granted-Service-Unit": [
+        :"Granted-Service-Unit".new(
+          "CC-Total-Octets": :ej.get({"Granted-Service-Unit", "CC-Total-Octets"}, accumulator) |> check_udefined,
+          "CC-Input-Octets": :ej.get({"Granted-Service-Unit", "CC-Input-Octets"}, accumulator) |> check_udefined,
+          "CC-Output-Octets": :ej.get({"Granted-Service-Unit", "CC-Output-Octets"}, accumulator) |> check_udefined)
+      ],
+      "Used-Service-Unit": [
+        :"Used-Service-Unit".new(
+          "CC-Total-Octets": :ej.get({"Used-Service-Unit", "CC-Total-Octets"}, accumulator)|> check_udefined,
+          "CC-Input-Octets": :ej.get({"Used-Service-Unit", "CC-Input-Octets"}, accumulator)|> check_udefined,
+          "CC-Output-Octets": :ej.get({"Used-Service-Unit", "CC-Output-Octets"}, accumulator)|> check_udefined)
+      ]
+    )
+  end
+  def check_udefined(:undefined), do: []
+  def check_udefined(x), do: [x]
   defp list_rec_converter(to_records) do 
     lc {key, rec} inlist to_records, do: {key, RecordHelpers.rec_converter(rec)}
   end

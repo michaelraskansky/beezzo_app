@@ -1,7 +1,7 @@
-Code.require_file "diameter_records.ex", "include"
-Code.require_file "ro_rel6_records.ex", "include"
-
 defmodule Dcca.App.Ro do
+  Code.require_file "diameter_records.ex", "include"
+  Code.require_file "ro_rel6_records.ex", "include"
+  Code.require_file "dcca_records.ex", "include"
   alias Dcca.Session.Worker, as: SessionWorker
 
 # diameter_app Callbacks ###############################################################################################################
@@ -66,9 +66,12 @@ defmodule Dcca.App.Ro do
 ### Private functions ################################################################################################################
 
   defp start_policy(cca), do: cca
-  defp reply(session_req), do: {:reply, session_req.cca |> RecordHelpers.rec_converter}
+  defp reply(session_req) do 
+    session_req = session_req.status |> session_req.cca."Result-Code"  |> session_req.cca
+    {:reply, session_req.cca |> RecordHelpers.rec_converter}
+  end
   defp create_error_response(msg) do 
-    Dcca.SessionRequest.new(cca: msg |> Dcca.Session.Worker.create_cca(5012))
+    SessionRequest.new(cca: msg |> Dcca.Session.Worker.create_cca(5012))
   end
 
 ######################################################################################################################################
