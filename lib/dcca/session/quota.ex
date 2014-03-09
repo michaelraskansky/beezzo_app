@@ -226,5 +226,8 @@ defmodule Dcca.Session.Quota do
       "CC-Input-Octets": req."CC-Input-Octets",
       "CC-Output-Octets": req."CC-Output-Octets")
   end
+  def ej_get(data, path), do: :ej.get(path, data)
+  def ej_set(data, path, to), do: :ej.set(path, data, to)
+
   # Helper Functions ################################################################################################################################
 end

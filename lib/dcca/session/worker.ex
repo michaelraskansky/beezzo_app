@@ -19,7 +19,7 @@ defmodule Dcca.Session.Worker do
 
   def terminate(ccr) do
     lookup({:session, ccr}) 
-      |> :gen_fsm.sync_send_event(:terminate)
+      |> :gen_fsm.sync_send_event({:terminate, ccr})
   end
 
   def start_link(opts) do
@@ -37,9 +37,9 @@ defmodule Dcca.Session.Worker do
     case Accumulators.get_accumulators(session_req.subscription) do
       { _key, { :error, :key_enoent } } -> 
         session_req = session_req.status 4012
-      {:ok, quotas} ->  
+      {:ok, session_quotas} ->  
         session_req = session_req.status 2001
-        session_req = quotas |> session_req.quotas
+        session_req = session_quotas |> session_req.quotas
     end
     register(session_req.session)
     {:ok, :idle, session_req}
@@ -65,7 +65,9 @@ defmodule Dcca.Session.Worker do
     end
   end
 
-  def open(:terminate, _from, session_req) do
+  def open({:terminate, ccr}, _from, session_req) do
+    session_req = update_session_req_cca(session_req, ccr)
+    Accumulators.set_accumulators(session_req)
     {:reply, session_req, :open, session_req }
   end
 
@@ -73,6 +75,7 @@ defmodule Dcca.Session.Worker do
   end
 
   def terminate(_reason, _fsm_state, session_req) do
+    IO.puts "Terminating worker"
   end
 #####################################################################################################################################################
 
@@ -108,5 +111,6 @@ defmodule Dcca.Session.Worker do
   defp lookup({:session, ccr}), do: :gproc.lookup_pids({:n, :l, {:session, list_to_atom(ccr."Session-Id")}}) |> List.first
   defp lookup({:peer, ccr}), do: :gproc.lookup_pids({:n, :l, {:peer, list_to_atom(ccr."Origin-Host")}}) |> List.first
   defp get_ok_pid({:ok, pid}), do: pid
+  defp get_ok_pid(error), do: IO.puts inspect error
 ######################################################################################################################################################
 end
