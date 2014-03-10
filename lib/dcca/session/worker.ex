@@ -66,16 +66,15 @@ defmodule Dcca.Session.Worker do
   end
 
   def open({:terminate, ccr}, _from, session_req) do
-    session_req = update_session_req_cca(session_req, ccr)
-    Accumulators.set_accumulators(session_req)
-    {:reply, session_req, :open, session_req }
+    {:stop, :normal, update_session_req_cca(session_req, ccr), update_session_req_cca(session_req, ccr)}
   end
 
-  def open(:tcc_expired, session_req) do
+  def open(:tcc_expired, _session_req) do
   end
 
   def terminate(_reason, _fsm_state, session_req) do
     IO.puts "Terminating worker"
+    Accumulators.set_accumulators(session_req)
   end
 #####################################################################################################################################################
 

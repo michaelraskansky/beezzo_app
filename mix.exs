@@ -10,6 +10,7 @@ defmodule Dcca.Mixfile do
     [ app: :dcca,
       version: "0.0.1",
       elixir: "~> 0.12.2",
+      escript_main_module: Dcca,
       deps: deps ]
   end
 

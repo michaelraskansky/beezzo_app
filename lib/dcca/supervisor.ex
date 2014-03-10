@@ -2,12 +2,10 @@ defmodule Dcca.Supervisor do
   use Supervisor.Behaviour
 
   def start_link(opts) do
-    IO.puts "#{__MODULE__}.start_link"
     :supervisor.start_link({:local, :ocs_supervisor_root}, __MODULE__, [opts])
   end
 
   def init(opts) do
-    IO.puts "#{__MODULE__}.init"
     children = [
       supervisor(Dcca.Peer.Supervisor, [opts]),
       worker(Dcca.Stack.Main, [opts])

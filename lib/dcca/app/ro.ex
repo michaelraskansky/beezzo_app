@@ -2,17 +2,15 @@ defmodule Dcca.App.Ro do
   Code.require_file "diameter_records.ex", "include"
   Code.require_file "ro_rel6_records.ex", "include"
   Code.require_file "dcca_records.ex", "include"
+  Code.require_file "base_records.ex", "include"
   alias Dcca.Session.Worker, as: SessionWorker
 
 # diameter_app Callbacks ###############################################################################################################
   # this method should add a peer session supervisor and record the peer supervisor and peer id in 
   # the active peer db
   def peer_up(_svcName, {_peerRef, cap}, _state) do                      
-
-    #Start a session supervisor for the peer and add the peer + supervisor to the Peer ETS
     {_, origin_host} = cap.origin_host
-    {_, pid} = Dcca.Session.Supervisor.start(origin_host)
-
+    Dcca.Session.Supervisor.start(origin_host)
   end                                                                
 
   # This is the callback method for when a peer goes down,
@@ -28,7 +26,7 @@ defmodule Dcca.App.Ro do
   def handle_request({:diameter_packet, _header, _avps, msg, _bin, _errors, _transport_data} ,_,_state) do
     msg = RecordHelpers.rec_converter(msg)
 
-    #try do
+    try do
       case msg do
 
         CCR["CC-Request-Type": 1] ->
@@ -54,12 +52,12 @@ defmodule Dcca.App.Ro do
             |> SessionWorker.event
             |> reply
       end
-    # catch e, r  ->
-      #    IO.puts "#{__MODULE__}.handle_request exception! #{e} #{r}"
-      #  msg
-      #    |> create_error_response
-      #    |> reply
-      #  end
+    catch e, r  ->
+      IO.puts "#{__MODULE__}.handle_request exception! #{e} #{r}"
+      msg
+        |> create_error_response
+        |> reply
+    end
   end                             
 ######################################################################################################################################
 
