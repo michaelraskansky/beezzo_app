@@ -1,0 +1,1 @@
+elixir --no-halt --detached --sname dcca -S mix
